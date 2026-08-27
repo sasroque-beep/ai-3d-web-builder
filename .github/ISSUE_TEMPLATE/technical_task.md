@@ -1,0 +1,54 @@
+---
+name: Technical Task
+about: Tarefa técnica
+title: "[TECH] "
+labels: ["technical"]
+---
+
+# 🔧 Tarefa
+
+Descreva a tarefa técnica.
+
+# 🎯 Objetivo
+
+Qual é o objetivo desta tarefa?
+
+# 🧠 Contexto técnico
+
+Explique o contexto necessário para executar a tarefa.
+
+# 🏗️ Área afetada
+
+- [ ] Frontend
+- [ ] Backend
+- [ ] Banco de dados
+- [ ] API
+- [ ] Infraestrutura
+- [ ] CI/CD
+- [ ] Segurança
+- [ ] Performance
+- [ ] Observabilidade
+- [ ] Testes
+- [ ] 3D
+
+# 💡 Implementação proposta
+
+Descreva a solução técnica proposta.
+
+# ⚠️ Riscos
+
+Quais riscos ou impactos podem existir?
+
+# 🎯 Critérios de aceite
+
+- [ ]
+- [ ]
+- [ ]
+
+# 🧪 Testes
+
+- [ ] Unitário
+- [ ] Integração
+- [ ] E2E
+- [ ] Build
+- [ ] Lint
