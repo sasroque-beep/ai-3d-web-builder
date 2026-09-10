@@ -320,6 +320,58 @@ O objetivo é transformar o site em uma parte estratégica da aquisição e conv
 
 ---
 
+## 🧑‍💻 Desenvolvimento
+
+### Pré-requisitos
+
+- **Node 22** (ver `.nvmrc`)
+- **pnpm** via Corepack: `corepack enable`
+
+### Setup
+
+```bash
+pnpm install
+```
+
+Instala as dependências e os Git hooks (Lefthook).
+
+### Scripts
+
+| Comando | Função |
+| --- | --- |
+| `pnpm dev` | Servidor de desenvolvimento |
+| `pnpm build` | Build de produção |
+| `pnpm start` | Servir o build de produção |
+| `pnpm typecheck` | TypeScript (`tsc --noEmit`) |
+| `pnpm check` | Biome: lint + formatação + assist (gate de CI) |
+| `pnpm check:fix` | Biome: aplica correções seguras |
+| `pnpm test` | Testes unitários (Vitest) |
+| `pnpm test:coverage` | Testes com cobertura |
+
+Antes de abrir um PR:
+`pnpm check && pnpm typecheck && pnpm test && pnpm build` (a CI roda o mesmo).
+
+### Stack da fundação
+
+Next.js 15 (App Router) · React 19 · TypeScript strict · Tailwind CSS v4 ·
+Biome · Vitest · Lefthook + commitlint · pnpm · GitHub Actions.
+
+### Estrutura
+
+O código da aplicação fica em `src/`. Veja [`src/README.md`](./src/README.md)
+para o mapa de módulos e as regras de dependência. A maior parte das pastas de
+módulo é apenas scaffolding (só README) até a issue dedicada de cada uma.
+
+### Processo
+
+Fluxo obrigatório e convenções: [`AGENTS.md`](./AGENTS.md) e
+[`CONTRIBUTING.md`](./CONTRIBUTING.md).
+
+---
+
 ## 📌 Status
 
 🚧 Projeto em desenvolvimento.
+
+Fundação técnica (estrutura inicial, tooling e CI) implementada. Os módulos de
+produto serão desenvolvidos em issues dedicadas.
