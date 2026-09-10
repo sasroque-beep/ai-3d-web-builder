@@ -67,3 +67,6 @@ O Orchestrator não deve executar todas as tarefas diretamente quando houver um 
                     │
                     ▼
                DEPLOY AGENT
+```
+
+> _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._
