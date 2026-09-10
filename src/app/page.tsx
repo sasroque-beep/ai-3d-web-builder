@@ -7,7 +7,9 @@ export default function HomePage() {
       <h1 className="text-4xl font-bold sm:text-5xl">AI 3D Web Builder</h1>
       <p className="text-lg text-foreground/70">
         Initial project structure. Product modules are scaffolded under{" "}
-        <code className="rounded bg-white/10 px-1.5 py-0.5 text-base">src/</code>{" "}
+        <code className="rounded bg-white/10 px-1.5 py-0.5 text-base">
+          src/
+        </code>{" "}
         and will be implemented in dedicated issues.
       </p>
     </main>
