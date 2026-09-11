@@ -43,3 +43,6 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Local SQLite database (src/server/db)
+.data/

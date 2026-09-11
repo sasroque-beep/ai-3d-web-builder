@@ -1,15 +1,16 @@
 # Interface States
 
-> Status: **planned** — scaffolding only, no code yet.
+> Status: **implemented** (Issue #4) — `progress` (multi-step/long-running)
+> is still planned, no use case for it yet.
 
 Primitives for the interface states required across the product:
 
-- `skeleton` — content placeholders during load
-- `loading` — spinners / progress indicators
-- `empty` — empty states with a clear next action
-- `error` — error states with recovery
-- `success` — confirmation feedback
-- `progress` — multi-step / long-running progress
+- `Skeleton` — content placeholder during load (`skeleton`)
+- `Spinner` — inline loading indicator (`loading`)
+- `EmptyState` — empty state with a clear next action (`empty`)
+- `ErrorState` — error state with recovery (`error`)
+- `SuccessMessage` — confirmation feedback (`success`)
 
-Each primitive is presentational, accessible, and respects
-`prefers-reduced-motion`.
+Each primitive is presentational, accessible (`role="status"` /
+`role="alert"` where applicable), and respects `prefers-reduced-motion`
+(enforced globally in `src/app/globals.css`).

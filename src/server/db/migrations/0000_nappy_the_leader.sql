@@ -1,0 +1,21 @@
+CREATE TABLE `companies` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`segment` text NOT NULL,
+	`relationship_type` text DEFAULT 'lead' NOT NULL,
+	`origin` text DEFAULT 'manual' NOT NULL,
+	`city` text,
+	`state` text,
+	`website` text,
+	`social_media` text,
+	`phone` text,
+	`email` text,
+	`address` text,
+	`description` text,
+	`main_products` text,
+	`target_audience` text,
+	`main_goal` text,
+	`notes` text,
+	`created_at` text DEFAULT (current_timestamp) NOT NULL,
+	`updated_at` text DEFAULT (current_timestamp) NOT NULL
+);
