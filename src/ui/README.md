@@ -5,7 +5,7 @@ domain logic. May import from `src/lib` only.
 
 | Path | Purpose |
 | --- | --- |
-| `states/` | Interface-state primitives: skeleton, loading, empty, error, success, progress. |
+| `states/` | Interface-state primitives: skeleton, loading, empty, error, success. |
 
 Guidelines (see [`AGENTS.md`](../../AGENTS.md) §9–§10 and
 [`docs/DESIGN_SYSTEM.md`](../../docs/DESIGN_SYSTEM.md)):
@@ -15,4 +15,4 @@ Guidelines (see [`AGENTS.md`](../../AGENTS.md) §9–§10 and
 - animations honour `prefers-reduced-motion`
 - accessible and responsive by default
 
-Status: **planned** — no components implemented yet.
+Status: **in progress** — `states/` primitives implemented (Issue #4).

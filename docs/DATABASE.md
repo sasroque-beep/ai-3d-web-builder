@@ -51,3 +51,18 @@ Component
 ```
 
 > _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._
+
+---
+
+# 2. Persistência inicial (Issue #4)
+
+O motor de banco de dados de produção ainda não foi decidido. Para viabilizar
+o primeiro módulo de dados (cadastro de empresas/leads) sem antecipar essa
+decisão, foi adotado um banco **SQLite local** (via `@libsql/client` +
+Drizzle ORM), com schema e migrations versionados em
+`src/server/db/`.
+
+O acesso ao banco é isolado atrás de contratos de repositório (ex.:
+`CompanyRepository` em `src/server/persistence/`), consumidos pelos módulos
+de domínio. Isso mantém a troca futura de motor (ex.: PostgreSQL) restrita à
+camada `server/db`, sem exigir mudanças em `modules/`, `ui/` ou `app/`.
