@@ -45,3 +45,6 @@ Usuário
 Organização A
    ↓
 Clientes e Projetos A
+```
+
+> _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._

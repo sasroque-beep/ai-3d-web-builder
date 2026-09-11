@@ -1,5 +1,3 @@
-# AGENTS.md
-
 # 🤖 Instruções para Agentes de IA
 
 Este arquivo contém as regras obrigatórias para qualquer agente de IA que trabalhe neste projeto.

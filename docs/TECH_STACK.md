@@ -107,3 +107,6 @@ As animações devem respeitar:
 
 ```text
 prefers-reduced-motion
+```
+
+> _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._

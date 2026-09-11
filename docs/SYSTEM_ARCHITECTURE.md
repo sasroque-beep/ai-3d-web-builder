@@ -76,3 +76,6 @@ O sistema será dividido em grandes módulos.
                                                 │
                                                 ▼
                                               DEPLOY
+```
+
+> _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._

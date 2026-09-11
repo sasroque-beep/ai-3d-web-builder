@@ -1,0 +1,39 @@
+# Normalize line endings to LF on checkin for all text files.
+# Working tree stays LF on every platform (prevents CRLF/LF diff noise
+# and keeps Biome formatting stable across contributors).
+* text=auto eol=lf
+
+# Explicit text files
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.json  text eol=lf
+*.jsonc text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.html  text eol=lf
+*.svg   text eol=lf
+
+# Binary assets — never normalize
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.avif  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.mp4   binary
+*.webm  binary
+*.glb   binary
+*.gltf  binary
+*.hdr   binary
+*.pdf   binary

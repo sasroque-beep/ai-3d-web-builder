@@ -90,3 +90,6 @@ Captação de Leads
 Analytics
    ↓
 Otimização
+```
+
+> _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._

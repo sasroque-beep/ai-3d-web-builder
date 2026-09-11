@@ -188,3 +188,6 @@ Editar Site
 Salvar
    ↓
 Publicar
+```
+
+> _Seção truncada no commit original. O conteúdo será finalizado em issue dedicada._
