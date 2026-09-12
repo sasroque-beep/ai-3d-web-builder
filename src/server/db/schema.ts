@@ -113,3 +113,42 @@ export const companyDiagnostics = sqliteTable(
 
 export type CompanyDiagnosticRow = typeof companyDiagnostics.$inferSelect;
 export type NewCompanyDiagnosticRow = typeof companyDiagnostics.$inferInsert;
+
+export const companyStrategies = sqliteTable(
+  "company_strategies",
+  {
+    id: text("id").primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+    marketingObjective: text("marketing_objective"),
+    conversionObjective: text("conversion_objective"),
+    targetAudience: text("target_audience"),
+    painPoints: text("pain_points"),
+    desires: text("desires"),
+    valueProposition: text("value_proposition"),
+    differentiators: text("differentiators"),
+    objections: text("objections"),
+    salesArguments: text("sales_arguments"),
+    communicationTone: text("communication_tone"),
+    mainOffer: text("main_offer"),
+    desiredConversionActions: text("desired_conversion_actions"),
+    ctas: text("ctas"),
+    journeyDiscovery: text("journey_discovery"),
+    journeyConsideration: text("journey_consideration"),
+    journeyDecision: text("journey_decision"),
+    journeyConversion: text("journey_conversion"),
+    journeyPostConversion: text("journey_post_conversion"),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_strategies_company_id_idx").on(table.companyId),
+  ],
+);
+
+export type CompanyStrategyRow = typeof companyStrategies.$inferSelect;
+export type NewCompanyStrategyRow = typeof companyStrategies.$inferInsert;
