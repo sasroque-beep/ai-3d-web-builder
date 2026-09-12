@@ -82,3 +82,37 @@ Acesso isolado via `EnrichmentRepository` em
 `src/server/persistence/enrichment-repository.ts`, consumido pelo módulo
 `src/modules/research`. `source` é texto livre para já comportar, sem nova
 migration, uma futura coleta automatizada (scraping/API pública).
+
+---
+
+# 4. Diagnóstico do negócio (Issue #8)
+
+A tabela `company_diagnostics` guarda **um diagnóstico vigente por empresa**
+(índice único em `company_id`, atualizado via upsert — sem histórico
+versionado nesta primeira versão). Os campos cobrem resumo, nicho, proposta
+de valor, diferenciais, pontos fortes/fracos, oportunidades, riscos/lacunas,
+oportunidades de marketing/conversão, maturidade digital
+(`digital_maturity`: `none` | `basic` | `intermediate` | `advanced`) e
+recomendações iniciais. Os campos de lista (pontos fortes/fracos,
+oportunidades, riscos, recomendações) são armazenados como texto livre
+multilinha — um item por linha — e convertidos em lista apenas na
+apresentação; estruturação mais avançada fica para uma issue futura.
+
+Segmento, produtos/serviços, público-alvo e presença digital **não são
+duplicados**: o diagnóstico reaproveita esses dados diretamente do cadastro
+(`CompanyRecord`, Issue #4) em tempo de leitura. Pelo mesmo motivo, "dados
+faltantes" não é uma coluna própria — é calculado a partir dos campos de
+enriquecimento (Issue #6) que ainda não estão `confirmed`.
+
+Um diagnóstico só pode ser criado/atualizado quando a empresa tem ao menos um
+campo de enriquecimento com status `confirmed`; caso contrário, a operação é
+recusada (dados básicos do cadastro — nome/segmento — já são obrigatórios
+desde a Issue #4). Nenhuma informação ausente é inventada.
+
+`generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir nova
+migration, a futura geração automática por um agente/modelo de IA — nesta
+issue todo diagnóstico é preenchido manualmente pelo operador.
+
+Acesso isolado via `DiagnosisRepository` em
+`src/server/persistence/diagnosis-repository.ts`, consumido pelo módulo
+`src/modules/research/diagnosis`.
