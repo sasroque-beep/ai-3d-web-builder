@@ -60,12 +60,20 @@ export default async function LeadDetailPage({
         />
       ) : null}
 
-      <div>
-        <p className="text-sm font-medium uppercase tracking-widest text-[var(--color-accent)]">
-          {company.relationshipType === "client" ? "Cliente" : "Lead"}
-        </p>
-        <h1 className="text-3xl font-bold">{company.name}</h1>
-        <p className="mt-1 text-sm text-foreground/70">{company.segment}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-widest text-[var(--color-accent)]">
+            {company.relationshipType === "client" ? "Cliente" : "Lead"}
+          </p>
+          <h1 className="text-3xl font-bold">{company.name}</h1>
+          <p className="mt-1 text-sm text-foreground/70">{company.segment}</p>
+        </div>
+        <Link
+          href={`/leads/${company.id}/research`}
+          className="shrink-0 rounded-md border border-white/15 px-4 py-2 text-sm font-medium transition-colors hover:border-white/30"
+        >
+          Enriquecer dados
+        </Link>
       </div>
 
       <dl className="grid gap-4 sm:grid-cols-2">

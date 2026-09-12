@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const companies = sqliteTable("companies", {
   id: text("id").primaryKey(),
@@ -33,3 +33,41 @@ export const companies = sqliteTable("companies", {
 
 export type CompanyRow = typeof companies.$inferSelect;
 export type NewCompanyRow = typeof companies.$inferInsert;
+
+export const ENRICHMENT_FIELD_KEYS = [
+  "tradeName",
+  "businessHours",
+  "apparentAudience",
+  "differentiators",
+  "additionalInfo",
+] as const;
+
+export const companyEnrichmentFields = sqliteTable(
+  "company_enrichment_fields",
+  {
+    id: text("id").primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+    fieldKey: text("field_key", { enum: ENRICHMENT_FIELD_KEYS }).notNull(),
+    value: text("value"),
+    source: text("source"),
+    status: text("status", {
+      enum: ["confirmed", "unverified", "missing"],
+    }).notNull(),
+    collectedAt: text("collected_at").notNull(),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_enrichment_fields_company_id_field_key_idx").on(
+      table.companyId,
+      table.fieldKey,
+    ),
+  ],
+);
+
+export type CompanyEnrichmentFieldRow =
+  typeof companyEnrichmentFields.$inferSelect;
+export type NewCompanyEnrichmentFieldRow =
+  typeof companyEnrichmentFields.$inferInsert;
