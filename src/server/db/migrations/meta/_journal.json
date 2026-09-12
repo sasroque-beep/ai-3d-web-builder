@@ -15,6 +15,13 @@
       "when": 1789144587377,
       "tag": "0001_fair_zuras",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789189063077,
+      "tag": "0002_remarkable_proudstar",
+      "breakpoints": true
     }
   ]
 }

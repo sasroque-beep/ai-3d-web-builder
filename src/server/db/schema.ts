@@ -71,3 +71,45 @@ export type CompanyEnrichmentFieldRow =
   typeof companyEnrichmentFields.$inferSelect;
 export type NewCompanyEnrichmentFieldRow =
   typeof companyEnrichmentFields.$inferInsert;
+
+export const DIGITAL_MATURITY_LEVELS = [
+  "none",
+  "basic",
+  "intermediate",
+  "advanced",
+] as const;
+
+export const companyDiagnostics = sqliteTable(
+  "company_diagnostics",
+  {
+    id: text("id").primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+    summary: text("summary"),
+    niche: text("niche"),
+    valueProposition: text("value_proposition"),
+    differentiators: text("differentiators"),
+    strengths: text("strengths"),
+    weaknesses: text("weaknesses"),
+    opportunities: text("opportunities"),
+    risksOrGaps: text("risks_or_gaps"),
+    marketingOpportunities: text("marketing_opportunities"),
+    conversionOpportunities: text("conversion_opportunities"),
+    digitalMaturity: text("digital_maturity", {
+      enum: DIGITAL_MATURITY_LEVELS,
+    }),
+    recommendations: text("recommendations"),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_diagnostics_company_id_idx").on(table.companyId),
+  ],
+);
+
+export type CompanyDiagnosticRow = typeof companyDiagnostics.$inferSelect;
+export type NewCompanyDiagnosticRow = typeof companyDiagnostics.$inferInsert;

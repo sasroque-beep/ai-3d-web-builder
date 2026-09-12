@@ -1,8 +1,9 @@
 # Research
 
 > Status: **in progress** — manual enrichment of existing companies/leads
-> implemented (Issue #6). Automated public-data collection (scraping,
-> external APIs) is still planned.
+> implemented (Issue #6), and a strategic business diagnosis built from that
+> data implemented (Issue #8). Automated public-data collection (scraping,
+> external APIs) and AI-generated diagnoses are still planned.
 
 ## Responsibility
 
@@ -30,6 +31,21 @@ find (with a source and a confirmed/unverified/missing status) for a company
 already registered by `../crm`. No scraping or external API integration is
 implemented — `source` is a free-text field precisely so a future automated
 collector can populate the same table without a schema change.
+
+- `diagnosis/` — strategic business diagnosis built from a company's
+  registration data (`../crm`) and its enrichment overview (above):
+  `types.ts` (`DiagnosisFormInput`, `DiagnosisRecord`,
+  `DigitalMaturityLevel`), `validation.ts`, `service.ts`
+  (`checkDiagnosisEligibility()` — a diagnosis requires at least one
+  `confirmed` enrichment field; `listMissingEnrichment()`;
+  `createDiagnosisService()` with `upsertDiagnosis()`/`getDiagnosis()`), and
+  `actions.ts` (`upsertDiagnosisAction`, used by
+  `src/app/leads/[id]/diagnosis`). One diagnosis per company (upsert, no
+  history yet). Segment, products, target audience and digital presence are
+  read directly from the company record, never duplicated; "missing data" is
+  computed from the enrichment overview, never stored. Entirely manual in
+  this version — `generatedBy: "manual" | "ai"` reserves the field for a
+  future AI-generated diagnosis without a schema change.
 
 ## Belongs here
 
