@@ -1,0 +1,31 @@
+CREATE TABLE `company_site_plans` (
+	`id` text PRIMARY KEY NOT NULL,
+	`company_id` text NOT NULL,
+	`main_goal` text,
+	`conversion_goal` text,
+	`priority_audience` text,
+	`site_value_proposition` text,
+	`featured_offer` text,
+	`primary_cta` text,
+	`secondary_ctas` text,
+	`communication_priorities` text,
+	`objections_to_address` text,
+	`social_proof_needed` text,
+	`trust_elements` text,
+	`required_features` text,
+	`required_integrations` text,
+	`lead_capture_requirements` text,
+	`contact_requirements` text,
+	`conversion_requirements` text,
+	`content_requirements` text,
+	`visual_requirements` text,
+	`experience_3d_opportunities` text,
+	`journey_stages_to_support` text,
+	`strategic_notes` text,
+	`generated_by` text DEFAULT 'manual' NOT NULL,
+	`created_at` text DEFAULT (current_timestamp) NOT NULL,
+	`updated_at` text DEFAULT (current_timestamp) NOT NULL,
+	FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `company_site_plans_company_id_idx` ON `company_site_plans` (`company_id`);

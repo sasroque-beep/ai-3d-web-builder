@@ -156,7 +156,7 @@ módulos (`site-builder`, `copy`), como pede a Issue #10.
 Uma estratégia só pode ser criada/atualizada quando a empresa já possui um
 diagnóstico estratégico vigente (Issue #8); caso contrário, a operação é
 recusada. Isso mantém a cadeia de dependência da Issue #10: Empresa →
-Enriquecimento → Diagnóstico → Estratégia.
+Enriquecimento → Diagnóstico → Estratégia → Planejamento do site.
 
 `generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir nova
 migration, a futura geração automática por um agente/modelo de IA — nesta
@@ -165,3 +165,48 @@ issue toda estratégia é preenchida manualmente pelo operador.
 Acesso isolado via `StrategyRepository` em
 `src/server/persistence/strategy-repository.ts`, consumido pelo módulo
 `src/modules/strategy`.
+
+---
+
+# 6. Planejamento estratégico do site (Issue #12)
+
+A tabela `company_site_plans` guarda **um planejamento vigente por
+empresa** (índice único em `company_id`, atualizado via upsert — sem
+histórico versionado nesta primeira versão, mesmo padrão de
+`company_diagnostics`/`company_strategies`).
+
+Os campos cobrem objetivo principal do site, objetivo principal de
+conversão, público prioritário, proposta de valor aplicada ao site,
+oferta/produto/serviço principal, CTA principal, CTAs secundários,
+prioridades de comunicação, objeções que o site deverá responder, provas
+sociais necessárias, elementos de confiança, funcionalidades necessárias,
+integrações desejadas, requisitos de captação de leads, de contato, de
+conversão, de conteúdo e visuais, oportunidades de experiência 3D, quais
+etapas da jornada do cliente o site deverá apoiar e observações
+estratégicas. Os campos de lista (CTAs secundários, prioridades de
+comunicação, objeções, provas sociais, elementos de confiança,
+funcionalidades, integrações, etapas da jornada) seguem a mesma convenção
+das Issues #8/#10: texto livre multilinha, um item por linha, convertido
+em lista apenas na apresentação.
+
+O planejamento não duplica dados de cadastro, diagnóstico ou estratégia:
+a tela reaproveita segmento, proposta de valor, oferta principal e
+público-alvo diretamente de `CompanyRecord`/`StrategyRecord` em tempo de
+leitura, como contexto de apoio ao preenchimento.
+
+Um planejamento só pode ser criado/atualizado quando a empresa já possui
+uma estratégia de marketing e conversão vigente (Issue #10); caso
+contrário, a operação é recusada. Isso estende a cadeia de dependência
+para: Empresa → Enriquecimento → Diagnóstico → Estratégia → Planejamento
+do site.
+
+`generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir
+nova migration, a futura geração automática por um agente/modelo de IA —
+nesta issue todo planejamento é preenchido manualmente pelo operador.
+
+Acesso isolado via `SitePlanRepository` em
+`src/server/persistence/site-plan-repository.ts`, consumido pelo módulo
+`src/modules/site-planning`. Os módulos futuros de arquitetura de
+páginas, conteúdo, design e experiência 3D deverão consumir este
+planejamento como entrada estruturada, em vez de reimplementar suas
+próprias regras de elegibilidade ou reler diretamente `strategy`.

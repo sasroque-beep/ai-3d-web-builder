@@ -29,6 +29,13 @@
       "when": 1789192857622,
       "tag": "0003_quick_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789219883226,
+      "tag": "0004_curly_silhouette",
+      "breakpoints": true
     }
   ]
 }

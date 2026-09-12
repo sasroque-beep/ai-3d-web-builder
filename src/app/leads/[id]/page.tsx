@@ -87,6 +87,12 @@ export default async function LeadDetailPage({
           >
             Ver estratégia
           </Link>
+          <Link
+            href={`/leads/${company.id}/site-planning`}
+            className="rounded-md border border-white/15 px-4 py-2 text-sm font-medium transition-colors hover:border-white/30"
+          >
+            Ver planejamento do site
+          </Link>
         </div>
       </div>
 
