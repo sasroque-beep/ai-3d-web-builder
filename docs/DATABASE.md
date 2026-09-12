@@ -66,3 +66,19 @@ O acesso ao banco é isolado atrás de contratos de repositório (ex.:
 `CompanyRepository` em `src/server/persistence/`), consumidos pelos módulos
 de domínio. Isso mantém a troca futura de motor (ex.: PostgreSQL) restrita à
 camada `server/db`, sem exigir mudanças em `modules/`, `ui/` ou `app/`.
+
+---
+
+# 3. Enriquecimento de dados (Issue #6)
+
+A tabela `company_enrichment_fields` guarda, por empresa, um registro por
+chave de informação conhecida (`field_key`: `tradeName`, `businessHours`,
+`apparentAudience`, `differentiators`, `additionalInfo`), com `value`,
+`source`, `status` (`confirmed` | `unverified` | `missing`) e `collected_at`.
+Um índice único em `(company_id, field_key)` garante upsert (a última
+atualização substitui a anterior; não há histórico versionado ainda).
+
+Acesso isolado via `EnrichmentRepository` em
+`src/server/persistence/enrichment-repository.ts`, consumido pelo módulo
+`src/modules/research`. `source` é texto livre para já comportar, sem nova
+migration, uma futura coleta automatizada (scraping/API pública).

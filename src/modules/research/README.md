@@ -1,11 +1,35 @@
 # Research
 
-> Status: **planned** — scaffolding only, no code yet.
+> Status: **in progress** — manual enrichment of existing companies/leads
+> implemented (Issue #6). Automated public-data collection (scraping,
+> external APIs) is still planned.
 
 ## Responsibility
 
 Collect public information about a company and its leads, and turn it into a
 structured business analysis the rest of the pipeline can consume.
+
+## Implemented
+
+- `types.ts` — `EnrichmentFieldKey` (`tradeName`, `businessHours`,
+  `apparentAudience`, `differentiators`, `additionalInfo`),
+  `EnrichmentStatus` (`confirmed` | `unverified` | `missing`),
+  `EnrichmentFieldRecord`, `EnrichmentOverview`.
+- `validation.ts` — field/status enum validation; a value is required unless
+  the status is `missing`.
+- `service.ts` — `createResearchService()`: `upsertField()` (one record per
+  company + field key — later calls update the existing entry rather than
+  duplicating it) and `getEnrichmentOverview()` (always returns all known
+  field keys, synthesizing a `missing` placeholder for keys with no stored
+  record yet).
+- `actions.ts` — `upsertEnrichmentFieldAction`, the Next.js Server Action used
+  by `src/app/leads/[id]/research`.
+
+This is a manually-operated enrichment flow: the operator records what they
+find (with a source and a confirmed/unverified/missing status) for a company
+already registered by `../crm`. No scraping or external API integration is
+implemented — `source` is a free-text field precisely so a future automated
+collector can populate the same table without a schema change.
 
 ## Belongs here
 
