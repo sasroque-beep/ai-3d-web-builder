@@ -152,3 +152,45 @@ export const companyStrategies = sqliteTable(
 
 export type CompanyStrategyRow = typeof companyStrategies.$inferSelect;
 export type NewCompanyStrategyRow = typeof companyStrategies.$inferInsert;
+
+export const companySitePlans = sqliteTable(
+  "company_site_plans",
+  {
+    id: text("id").primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+    mainGoal: text("main_goal"),
+    conversionGoal: text("conversion_goal"),
+    priorityAudience: text("priority_audience"),
+    siteValueProposition: text("site_value_proposition"),
+    featuredOffer: text("featured_offer"),
+    primaryCta: text("primary_cta"),
+    secondaryCtas: text("secondary_ctas"),
+    communicationPriorities: text("communication_priorities"),
+    objectionsToAddress: text("objections_to_address"),
+    socialProofNeeded: text("social_proof_needed"),
+    trustElements: text("trust_elements"),
+    requiredFeatures: text("required_features"),
+    requiredIntegrations: text("required_integrations"),
+    leadCaptureRequirements: text("lead_capture_requirements"),
+    contactRequirements: text("contact_requirements"),
+    conversionRequirements: text("conversion_requirements"),
+    contentRequirements: text("content_requirements"),
+    visualRequirements: text("visual_requirements"),
+    experience3dOpportunities: text("experience_3d_opportunities"),
+    journeyStagesToSupport: text("journey_stages_to_support"),
+    strategicNotes: text("strategic_notes"),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_site_plans_company_id_idx").on(table.companyId),
+  ],
+);
+
+export type CompanySitePlanRow = typeof companySitePlans.$inferSelect;
+export type NewCompanySitePlanRow = typeof companySitePlans.$inferInsert;
