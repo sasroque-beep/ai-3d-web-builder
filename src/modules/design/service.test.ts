@@ -3,12 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   checkPageArchitectureEligibility,
   checkSectionEligibility,
+  checkThemeEligibility,
   createDesignService,
 } from "@/modules/design/service";
 import type {
   SitePageFormInput,
   SitePageRecord,
   SitePageSectionFormInput,
+  SiteThemeFormInput,
 } from "@/modules/design/types";
 import type { SitePlanRecord } from "@/modules/site-planning/types";
 import type {
@@ -21,6 +23,11 @@ import type {
   SitePageSectionRepository,
   UpsertCompanySitePageSection,
 } from "@/server/persistence/site-page-section-repository";
+import type {
+  CompanySiteTheme,
+  SiteThemeRepository,
+  UpsertCompanySiteTheme,
+} from "@/server/persistence/site-theme-repository";
 
 function createFakePageRepository(): SitePageRepository {
   const rows = new Map<string, CompanySitePage>();
@@ -73,6 +80,28 @@ function createFakeSectionRepository(): SitePageSectionRepository {
     },
     async getById(id: string) {
       return rows.get(id);
+    },
+  };
+}
+
+function createFakeThemeRepository(): SiteThemeRepository {
+  const rows = new Map<string, CompanySiteTheme>();
+  let nextId = 1;
+
+  return {
+    async upsert(input: UpsertCompanySiteTheme) {
+      const existing = rows.get(input.companyId);
+      const row: CompanySiteTheme = {
+        ...input,
+        id: existing?.id ?? `theme-${nextId++}`,
+        createdAt: existing?.createdAt ?? "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      };
+      rows.set(input.companyId, row);
+      return row;
+    },
+    async getByCompanyId(companyId: string) {
+      return rows.get(companyId);
     },
   };
 }
@@ -135,6 +164,28 @@ function validSectionInput(
     objective: "Comunicar a proposta de valor imediatamente.",
     ctaReference: "Peça agora",
     position: "",
+    ...overrides,
+  };
+}
+
+function validThemeInput(
+  overrides: Partial<SiteThemeFormInput> = {},
+): SiteThemeFormInput {
+  return {
+    companyId: "company-1",
+    primaryColor: "#8B5E3C",
+    secondaryColor: "#F4E9DA",
+    accentColor: "#D97706",
+    backgroundColor: "#FFFDF9",
+    headingFont: "Fraunces",
+    bodyFont: "Inter",
+    visualStyle: "Acolhedor e artesanal",
+    colorModePreference: "light",
+    spacingDensity: "comfortable",
+    ctaVisualGuidelines: "Botão sólido laranja, cantos arredondados",
+    visualReferences: "Padarias artesanais europeias",
+    accessibilityRequirements: "Contraste mínimo AA",
+    notes: "Priorizar mobile-first.",
     ...overrides,
   };
 }
@@ -389,5 +440,132 @@ describe("design service — sections", () => {
     const found = await service.getSectionById("unknown-section");
 
     expect(found).toBeUndefined();
+  });
+});
+
+describe("checkThemeEligibility", () => {
+  it("is eligible when the company has at least one page", () => {
+    const page: SitePageRecord = {
+      id: "page-1",
+      companyId: "company-1",
+      slug: "pagina-inicial",
+      name: "Página inicial",
+      objective: null,
+      journeyStage: null,
+      position: 1,
+      generatedBy: "manual",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    expect(checkThemeEligibility([page])).toEqual({ eligible: true });
+  });
+
+  it("is not eligible when the company has no pages yet", () => {
+    const result = checkThemeEligibility([]);
+
+    expect(result.eligible).toBe(false);
+    if (!result.eligible) {
+      expect(result.reason).toBeTruthy();
+    }
+  });
+});
+
+describe("design service — theme", () => {
+  async function createEligiblePage(
+    designService: ReturnType<typeof createDesignService>,
+  ) {
+    const result = await designService.upsertPage(
+      validPageInput(),
+      existingSitePlan(),
+    );
+    if (!result.success) {
+      throw new Error("expected page creation to succeed");
+    }
+    return result.data;
+  }
+
+  it("refuses to create a theme when the company has no pages", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+      createFakeThemeRepository(),
+    );
+
+    const result = await service.upsertTheme(validThemeInput(), []);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect("ineligible" in result && result.ineligible).toBe(true);
+    }
+  });
+
+  it("rejects invalid input without touching the repository", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+      createFakeThemeRepository(),
+    );
+    const page = await createEligiblePage(service);
+
+    const result = await service.upsertTheme(
+      validThemeInput({ colorModePreference: "rainbow" }),
+      [page],
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success && !("ineligible" in result)) {
+      expect(result.errors.colorModePreference).toBeDefined();
+    }
+  });
+
+  it("creates a theme from valid input for an eligible company", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+      createFakeThemeRepository(),
+    );
+    const page = await createEligiblePage(service);
+
+    const result = await service.upsertTheme(validThemeInput(), [page]);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.primaryColor).toBe("#8B5E3C");
+      expect(result.data.generatedBy).toBe("manual");
+    }
+  });
+
+  it("updates the same theme instead of duplicating it for the same company", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+      createFakeThemeRepository(),
+    );
+    const page = await createEligiblePage(service);
+
+    const first = await service.upsertTheme(validThemeInput(), [page]);
+    const second = await service.upsertTheme(
+      validThemeInput({ primaryColor: "#000000" }),
+      [page],
+    );
+
+    if (!first.success || !second.success) {
+      throw new Error("expected both upserts to succeed");
+    }
+    expect(second.data.id).toBe(first.data.id);
+    expect(second.data.primaryColor).toBe("#000000");
+  });
+
+  it("returns undefined when the company has no theme yet", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+      createFakeThemeRepository(),
+    );
+
+    const theme = await service.getTheme("company-1");
+
+    expect(theme).toBeUndefined();
   });
 });

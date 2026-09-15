@@ -289,7 +289,7 @@ uma segunda checagem subindo até o planejamento estratégico ou a
 empresa — a seção já não existiria sem a cadeia completa ter sido
 elegível quando criada. Isso estende a cadeia de dependência para:
 Empresa → Enriquecimento → Diagnóstico → Estratégia → Planejamento do
-site → Arquitetura de páginas → Conteúdo.
+site → Arquitetura de páginas → Conteúdo → Tema visual.
 
 Assim como em todos os módulos anteriores, não há exclusão nesta versão
 (apenas upsert).
@@ -301,3 +301,48 @@ nesta issue todo conteúdo é preenchido manualmente pelo operador.
 Acesso isolado via `SectionCopyRepository` em
 `src/server/persistence/section-copy-repository.ts`, consumido pelo
 módulo `src/modules/copy`.
+
+---
+
+# 9. Tema visual e diretrizes de design (Issue #18)
+
+Volta ao padrão mais simples de **um registro por empresa** (mesmo de
+`company_diagnostics`, `company_strategies` e `company_site_plans`), mas
+com uma elegibilidade diferente: em vez de exigir um registro específico
+(ex.: um diagnóstico), exige-se **uma lista não vazia** — a empresa
+precisa ter ao menos uma página na arquitetura (Issue #14). Esse formato
+de elegibilidade já existia em `checkDiagnosisEligibility` (§4, "ao
+menos um campo de enriquecimento confirmado"), só que aplicado aqui a
+"ao menos uma página" em vez de "ao menos um campo".
+
+A tabela `company_site_themes` guarda **um tema vigente por empresa**
+(índice único em `company_id`, atualizado via upsert). Os campos cobrem
+paleta de cores (`primary_color`, `secondary_color`, `accent_color`,
+`background_color`), tipografia (`heading_font`, `body_font`), estilo
+visual, preferência de modo de cor (`color_mode_preference`: `light` |
+`dark` | `both`), densidade de espaçamento (`spacing_density`:
+`compact` | `comfortable` | `spacious`), diretrizes visuais do CTA
+principal, referências visuais, requisitos de acessibilidade e
+observações gerais.
+
+`color_mode_preference` e `spacing_density` são enums (conjunto pequeno
+e fechado com significado de comportamento real, mesmo critério de
+`journey_stage`/`digital_maturity`); os demais campos são texto livre
+opcional, mesmo critério de `communication_tone` (Issue #10).
+
+O tema só pode ser criado/atualizado quando a empresa já possui ao menos
+uma página na arquitetura (Issue #14); caso contrário, a operação é
+recusada. Isso estende a cadeia de dependência para: Empresa →
+Enriquecimento → Diagnóstico → Estratégia → Planejamento do site →
+Arquitetura de páginas → Conteúdo → Tema visual.
+
+Assim como em todos os módulos anteriores, não há exclusão nesta versão
+(apenas upsert).
+
+`generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir
+nova migration, a futura geração automática por um agente/modelo de IA —
+nesta issue todo tema é preenchido manualmente pelo operador.
+
+Acesso isolado via `SiteThemeRepository` em
+`src/server/persistence/site-theme-repository.ts`, consumido pelo módulo
+`src/modules/design` (mesmo módulo da arquitetura de páginas — ver §7).

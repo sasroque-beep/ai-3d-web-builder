@@ -298,3 +298,47 @@ export type CompanySitePageSectionCopyRow =
   typeof companySitePageSectionCopies.$inferSelect;
 export type NewCompanySitePageSectionCopyRow =
   typeof companySitePageSectionCopies.$inferInsert;
+
+export const COLOR_MODE_KEYS = ["light", "dark", "both"] as const;
+
+export const SPACING_DENSITY_KEYS = [
+  "compact",
+  "comfortable",
+  "spacious",
+] as const;
+
+export const companySiteThemes = sqliteTable(
+  "company_site_themes",
+  {
+    id: text("id").primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+    primaryColor: text("primary_color"),
+    secondaryColor: text("secondary_color"),
+    accentColor: text("accent_color"),
+    backgroundColor: text("background_color"),
+    headingFont: text("heading_font"),
+    bodyFont: text("body_font"),
+    visualStyle: text("visual_style"),
+    colorModePreference: text("color_mode_preference", {
+      enum: COLOR_MODE_KEYS,
+    }),
+    spacingDensity: text("spacing_density", { enum: SPACING_DENSITY_KEYS }),
+    ctaVisualGuidelines: text("cta_visual_guidelines"),
+    visualReferences: text("visual_references"),
+    accessibilityRequirements: text("accessibility_requirements"),
+    notes: text("notes"),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_site_themes_company_id_idx").on(table.companyId),
+  ],
+);
+
+export type CompanySiteThemeRow = typeof companySiteThemes.$inferSelect;
+export type NewCompanySiteThemeRow = typeof companySiteThemes.$inferInsert;
