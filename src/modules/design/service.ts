@@ -156,6 +156,13 @@ export function createDesignService(
         .map(toSitePageSectionRecord)
         .sort((a, b) => a.position - b.position);
     },
+
+    async getSectionById(
+      sectionId: string,
+    ): Promise<SitePageSectionRecord | undefined> {
+      const row = await sectionRepository.getById(sectionId);
+      return row ? toSitePageSectionRecord(row) : undefined;
+    },
   };
 }
 

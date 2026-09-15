@@ -5,28 +5,33 @@ import { migrate } from "drizzle-orm/libsql/migrator";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import * as schema from "@/server/db/schema";
-import { companies, companySitePages } from "@/server/db/schema";
 import {
-  createSitePageSectionRepository,
-  type SitePageSectionRepository,
-} from "@/server/persistence/site-page-section-repository";
+  companies,
+  companySitePageSections,
+  companySitePages,
+} from "@/server/db/schema";
+import {
+  createSectionCopyRepository,
+  type SectionCopyRepository,
+} from "@/server/persistence/section-copy-repository";
 
 const MIGRATIONS_FOLDER = join(process.cwd(), "src/server/db/migrations");
 
 function baseInput() {
   return {
-    pageId: "page-1",
-    sectionKey: "hero",
-    name: "Hero",
-    objective: "Comunicar a proposta de valor imediatamente.",
-    ctaReference: "Peça agora",
-    position: 1,
+    sectionId: "section-1",
+    headline: "Pão fresco todos os dias",
+    subheadline: "Direto do forno para a sua mesa.",
+    body: "Produzimos nosso pão artesanal diariamente.",
+    ctaLabel: "Peça agora",
+    socialProofText: "Mais de 500 clientes satisfeitos no bairro.",
+    notes: "Manter tom acolhedor.",
     generatedBy: "manual" as const,
   };
 }
 
 async function createIsolatedRepository(): Promise<{
-  repository: SitePageSectionRepository;
+  repository: SectionCopyRepository;
   db: ReturnType<typeof drizzle>;
 }> {
   const client = createClient({ url: ":memory:" });
@@ -63,69 +68,57 @@ async function createIsolatedRepository(): Promise<{
     position: 1,
   });
 
-  return { repository: createSitePageSectionRepository(db), db };
+  await db.insert(companySitePageSections).values({
+    id: "section-1",
+    pageId: "page-1",
+    sectionKey: "hero",
+    name: "Hero",
+    objective: null,
+    ctaReference: null,
+    position: 1,
+  });
+
+  return { repository: createSectionCopyRepository(db), db };
 }
 
-describe("site page section repository", () => {
-  let repository: SitePageSectionRepository;
+describe("section copy repository", () => {
+  let repository: SectionCopyRepository;
 
   beforeEach(async () => {
     ({ repository } = await createIsolatedRepository());
   });
 
-  it("creates a new section and assigns id and timestamps", async () => {
+  it("creates new content and assigns id and timestamps", async () => {
     const saved = await repository.upsert(baseInput());
 
     expect(saved.id).toBeTruthy();
-    expect(saved.sectionKey).toBe("hero");
+    expect(saved.headline).toBe("Pão fresco todos os dias");
     expect(saved.generatedBy).toBe("manual");
     expect(saved.createdAt).toBeTruthy();
     expect(saved.updatedAt).toBeTruthy();
   });
 
-  it("updates the existing section instead of duplicating it for the same key", async () => {
+  it("updates the existing content instead of duplicating it for the same section", async () => {
     const created = await repository.upsert(baseInput());
     const updated = await repository.upsert({
       ...baseInput(),
-      name: "Hero atualizado",
-      position: 3,
+      headline: "Headline atualizado",
     });
 
     expect(updated.id).toBe(created.id);
-    expect(updated.name).toBe("Hero atualizado");
-    expect(updated.position).toBe(3);
+    expect(updated.headline).toBe("Headline atualizado");
   });
 
-  it("lists all sections for a page", async () => {
+  it("finds content by section id", async () => {
     await repository.upsert(baseInput());
-    await repository.upsert({
-      ...baseInput(),
-      sectionKey: "oferta",
-      name: "Oferta",
-      position: 2,
-    });
 
-    const all = await repository.listByPage("page-1");
+    const found = await repository.getBySectionId("section-1");
 
-    expect(all).toHaveLength(2);
+    expect(found?.sectionId).toBe("section-1");
   });
 
-  it("returns an empty list when the page has no sections", async () => {
-    const all = await repository.listByPage("unknown-page");
-
-    expect(all).toEqual([]);
-  });
-
-  it("finds a section by id", async () => {
-    const created = await repository.upsert(baseInput());
-
-    const found = await repository.getById(created.id);
-
-    expect(found?.sectionKey).toBe("hero");
-  });
-
-  it("returns undefined when the section id doesn't exist", async () => {
-    const found = await repository.getById("unknown-section");
+  it("returns undefined when the section has no content yet", async () => {
+    const found = await repository.getBySectionId("unknown-section");
 
     expect(found).toBeUndefined();
   });

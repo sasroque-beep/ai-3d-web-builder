@@ -267,3 +267,34 @@ export type CompanySitePageSectionRow =
   typeof companySitePageSections.$inferSelect;
 export type NewCompanySitePageSectionRow =
   typeof companySitePageSections.$inferInsert;
+
+export const companySitePageSectionCopies = sqliteTable(
+  "company_site_page_section_copies",
+  {
+    id: text("id").primaryKey(),
+    sectionId: text("section_id")
+      .notNull()
+      .references(() => companySitePageSections.id),
+    headline: text("headline"),
+    subheadline: text("subheadline"),
+    body: text("body"),
+    ctaLabel: text("cta_label"),
+    socialProofText: text("social_proof_text"),
+    notes: text("notes"),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_site_page_section_copies_section_id_idx").on(
+      table.sectionId,
+    ),
+  ],
+);
+
+export type CompanySitePageSectionCopyRow =
+  typeof companySitePageSectionCopies.$inferSelect;
+export type NewCompanySitePageSectionCopyRow =
+  typeof companySitePageSectionCopies.$inferInsert;

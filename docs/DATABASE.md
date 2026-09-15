@@ -249,7 +249,10 @@ Uma página só pode ser criada/atualizada quando a empresa já possui um
 planejamento estratégico do site vigente (Issue #12); uma seção só pode
 ser criada/atualizada quando a página informada existe. Nenhuma das duas
 operações verifica novamente o planejamento na criação de uma seção — a
-página já não existiria sem ter sido elegível quando criada.
+página já não existiria sem ter sido elegível quando criada. Isso
+estende a cadeia de dependência para: Empresa → Enriquecimento →
+Diagnóstico → Estratégia → Planejamento do site → Arquitetura de páginas
+→ Conteúdo.
 
 Assim como em todos os módulos anteriores, não há exclusão nesta versão
 (apenas upsert) — mesmo nível de escopo de `crm`, `research`,
@@ -264,3 +267,37 @@ Acesso isolado via `SitePageRepository` em
 `SitePageSectionRepository` em
 `src/server/persistence/site-page-section-repository.ts`, consumidos
 pelo módulo `src/modules/design`.
+
+---
+
+# 8. Conteúdo das seções (Issue #16)
+
+Diferente das duas tabelas da Issue #14 (muitas por empresa/página,
+chave composta escolhida pelo usuário), o conteúdo de uma seção volta ao
+padrão mais simples já usado por `company_diagnostics`,
+`company_strategies` e `company_site_plans`: **um bloco por seção**.
+
+A tabela `company_site_page_section_copies` guarda uma linha por seção
+(`id`, `section_id`, `headline`, `subheadline`, `body`, `cta_label`,
+`social_proof_text`, `notes`, `generated_by`, timestamps), com índice
+único em `section_id` — upsert: reenviar o mesmo `section_id` atualiza o
+bloco de conteúdo em vez de duplicá-lo.
+
+O conteúdo de uma seção só pode ser criado/atualizado quando a seção
+correspondente já existe na arquitetura de páginas (Issue #14); não há
+uma segunda checagem subindo até o planejamento estratégico ou a
+empresa — a seção já não existiria sem a cadeia completa ter sido
+elegível quando criada. Isso estende a cadeia de dependência para:
+Empresa → Enriquecimento → Diagnóstico → Estratégia → Planejamento do
+site → Arquitetura de páginas → Conteúdo.
+
+Assim como em todos os módulos anteriores, não há exclusão nesta versão
+(apenas upsert).
+
+`generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir
+nova migration, a futura geração automática por um agente/modelo de IA —
+nesta issue todo conteúdo é preenchido manualmente pelo operador.
+
+Acesso isolado via `SectionCopyRepository` em
+`src/server/persistence/section-copy-repository.ts`, consumido pelo
+módulo `src/modules/copy`.

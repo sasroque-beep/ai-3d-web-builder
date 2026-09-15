@@ -22,6 +22,7 @@ export type UpsertCompanySitePageSection = Omit<
 export interface SitePageSectionRepository {
   upsert(input: UpsertCompanySitePageSection): Promise<CompanySitePageSection>;
   listByPage(pageId: string): Promise<CompanySitePageSection[]>;
+  getById(id: string): Promise<CompanySitePageSection | undefined>;
 }
 
 export function createSitePageSectionRepository(
@@ -69,6 +70,16 @@ export function createSitePageSectionRepository(
         .from(companySitePageSections)
         .where(eq(companySitePageSections.pageId, pageId))
         .all();
+    },
+
+    async getById(id) {
+      await ensureMigrated(database);
+      const [row] = await database
+        .select()
+        .from(companySitePageSections)
+        .where(eq(companySitePageSections.id, id))
+        .limit(1);
+      return row;
     },
   };
 }

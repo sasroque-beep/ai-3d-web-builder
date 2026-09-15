@@ -43,6 +43,13 @@
       "when": 1789336309500,
       "tag": "0005_tough_silver_centurion",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789494559518,
+      "tag": "0006_awesome_dreadnoughts",
+      "breakpoints": true
     }
   ]
 }
