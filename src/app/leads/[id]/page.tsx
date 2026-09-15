@@ -111,6 +111,12 @@ export default async function LeadDetailPage({
           >
             Ver tema visual
           </Link>
+          <Link
+            href={`/leads/${company.id}/site-builder`}
+            className="rounded-md border border-white/15 px-4 py-2 text-sm font-medium transition-colors hover:border-white/30"
+          >
+            Ver preview do site
+          </Link>
         </div>
       </div>
 

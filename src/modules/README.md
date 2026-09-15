@@ -14,7 +14,7 @@ by importing another module's internals.
 | `design/` | Page architecture and design-system application. **Implemented (page architecture).** |
 | `copy/` | Generate copywriting aligned with the strategy. **Implemented (manual content per section).** |
 | `experience-3d/` | 3D and motion experiences. |
-| `site-builder/` | Generate and edit pages, sections and components. |
+| `site-builder/` | Generate and edit pages, sections and components. **Implemented (read-only preview).** |
 | `marketing/` | Marketing/analytics integrations (GA, GTM, pixels, UTMs, CAPI). |
 | `analytics/` | Conversion tracking and reporting. |
 
