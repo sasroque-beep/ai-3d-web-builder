@@ -71,6 +71,9 @@ function createFakeSectionRepository(): SitePageSectionRepository {
     async listByPage(pageId: string) {
       return [...rows.values()].filter((row) => row.pageId === pageId);
     },
+    async getById(id: string) {
+      return rows.get(id);
+    },
   };
 }
 
@@ -356,5 +359,35 @@ describe("design service — sections", () => {
 
     const sections = await service.listSections(page.id);
     expect(sections).toHaveLength(1);
+  });
+
+  it("finds a section by id", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+    );
+    const page = await createEligiblePage(service);
+    const created = await service.upsertSection(
+      validSectionInput({ pageId: page.id }),
+      page,
+    );
+    if (!created.success) {
+      throw new Error("expected section creation to succeed");
+    }
+
+    const found = await service.getSectionById(created.data.id);
+
+    expect(found?.sectionKey).toBe("hero");
+  });
+
+  it("returns undefined when the section id doesn't exist", async () => {
+    const service = createDesignService(
+      createFakePageRepository(),
+      createFakeSectionRepository(),
+    );
+
+    const found = await service.getSectionById("unknown-section");
+
+    expect(found).toBeUndefined();
   });
 });

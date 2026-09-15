@@ -12,7 +12,7 @@ by importing another module's internals.
 | `strategy/` | Define the conversion strategy for a project. **Implemented.** |
 | `site-planning/` | Turn the strategy into a structured plan for the site to be built. **Implemented.** |
 | `design/` | Page architecture and design-system application. **Implemented (page architecture).** |
-| `copy/` | Generate copywriting aligned with the strategy. |
+| `copy/` | Generate copywriting aligned with the strategy. **Implemented (manual content per section).** |
 | `experience-3d/` | 3D and motion experiences. |
 | `site-builder/` | Generate and edit pages, sections and components. |
 | `marketing/` | Marketing/analytics integrations (GA, GTM, pixels, UTMs, CAPI). |
