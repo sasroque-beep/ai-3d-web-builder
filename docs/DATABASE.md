@@ -198,7 +198,7 @@ Um planejamento só pode ser criado/atualizado quando a empresa já possui
 uma estratégia de marketing e conversão vigente (Issue #10); caso
 contrário, a operação é recusada. Isso estende a cadeia de dependência
 para: Empresa → Enriquecimento → Diagnóstico → Estratégia → Planejamento
-do site.
+do site → Arquitetura de páginas.
 
 `generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir
 nova migration, a futura geração automática por um agente/modelo de IA —
@@ -210,3 +210,57 @@ Acesso isolado via `SitePlanRepository` em
 páginas, conteúdo, design e experiência 3D deverão consumir este
 planejamento como entrada estruturada, em vez de reimplementar suas
 próprias regras de elegibilidade ou reler diretamente `strategy`.
+
+---
+
+# 7. Arquitetura de páginas (Issue #14)
+
+Diferente das tabelas anteriores (um registro vigente por empresa), a
+arquitetura de páginas é a primeira estrutura genuinamente um-para-muitos:
+uma empresa pode ter várias páginas, e cada página pode ter várias
+seções, em quantidade livre.
+
+A tabela `company_site_pages` guarda uma linha por página
+(`id`, `company_id`, `slug`, `name`, `objective`, `journey_stage`
+opcional — `discovery` | `consideration` | `decision` | `conversion` |
+`post_conversion` —, `position`, `generated_by`, timestamps). Um índice
+único composto em `(company_id, slug)` garante upsert: reenviar o mesmo
+`slug` atualiza a página em vez de duplicá-la — mesmo padrão de
+"múltiplos registros por empresa, chave definida pelo usuário" já
+comprovado por `company_enrichment_fields` (Issue #6), com a diferença de
+que ali a chave (`field_key`) vem de um enum fixo e aqui é escolhida
+livremente pelo usuário (validada por um padrão de slug).
+
+A tabela `company_site_page_sections` segue a mesma lógica um nível
+abaixo: uma linha por seção (`id`, `page_id`, `section_key`, `name`,
+`objective`, `cta_reference`, `position`, `generated_by`, timestamps),
+com índice único composto em `(page_id, section_key)`. `cta_reference` é
+texto livre (não uma FK) apontando para um dos CTAs já registrados no
+planejamento estratégico do site (Issue #12) — evita duplicar dado
+estruturado por uma referência que, neste estágio, é apenas descritiva.
+
+`position` é obrigatório em ambas as tabelas; quando o formulário não
+informa um valor, o serviço atribui automaticamente a próxima posição
+disponível (total de registros existentes + 1). Não há reordenação via
+arrastar-e-soltar nesta versão — para reordenar, o usuário reenvia o
+mesmo `slug`/`section_key` com uma posição diferente.
+
+Uma página só pode ser criada/atualizada quando a empresa já possui um
+planejamento estratégico do site vigente (Issue #12); uma seção só pode
+ser criada/atualizada quando a página informada existe. Nenhuma das duas
+operações verifica novamente o planejamento na criação de uma seção — a
+página já não existiria sem ter sido elegível quando criada.
+
+Assim como em todos os módulos anteriores, não há exclusão nesta versão
+(apenas upsert) — mesmo nível de escopo de `crm`, `research`,
+`diagnosis`, `strategy` e `site-planning`.
+
+`generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir
+nova migration, a futura geração automática por um agente/modelo de IA —
+nesta issue toda página e seção é preenchida manualmente pelo operador.
+
+Acesso isolado via `SitePageRepository` em
+`src/server/persistence/site-page-repository.ts` e
+`SitePageSectionRepository` em
+`src/server/persistence/site-page-section-repository.ts`, consumidos
+pelo módulo `src/modules/design`.

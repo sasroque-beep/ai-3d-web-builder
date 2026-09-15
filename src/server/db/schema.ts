@@ -1,5 +1,10 @@
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const companies = sqliteTable("companies", {
   id: text("id").primaryKey(),
@@ -194,3 +199,71 @@ export const companySitePlans = sqliteTable(
 
 export type CompanySitePlanRow = typeof companySitePlans.$inferSelect;
 export type NewCompanySitePlanRow = typeof companySitePlans.$inferInsert;
+
+export const JOURNEY_STAGE_KEYS = [
+  "discovery",
+  "consideration",
+  "decision",
+  "conversion",
+  "post_conversion",
+] as const;
+
+export const companySitePages = sqliteTable(
+  "company_site_pages",
+  {
+    id: text("id").primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    objective: text("objective"),
+    journeyStage: text("journey_stage", { enum: JOURNEY_STAGE_KEYS }),
+    position: integer("position").notNull(),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_site_pages_company_id_slug_idx").on(
+      table.companyId,
+      table.slug,
+    ),
+  ],
+);
+
+export type CompanySitePageRow = typeof companySitePages.$inferSelect;
+export type NewCompanySitePageRow = typeof companySitePages.$inferInsert;
+
+export const companySitePageSections = sqliteTable(
+  "company_site_page_sections",
+  {
+    id: text("id").primaryKey(),
+    pageId: text("page_id")
+      .notNull()
+      .references(() => companySitePages.id),
+    sectionKey: text("section_key").notNull(),
+    name: text("name").notNull(),
+    objective: text("objective"),
+    ctaReference: text("cta_reference"),
+    position: integer("position").notNull(),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_site_page_sections_page_id_section_key_idx").on(
+      table.pageId,
+      table.sectionKey,
+    ),
+  ],
+);
+
+export type CompanySitePageSectionRow =
+  typeof companySitePageSections.$inferSelect;
+export type NewCompanySitePageSectionRow =
+  typeof companySitePageSections.$inferInsert;
