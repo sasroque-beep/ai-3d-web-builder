@@ -334,7 +334,7 @@ O tema só pode ser criado/atualizado quando a empresa já possui ao menos
 uma página na arquitetura (Issue #14); caso contrário, a operação é
 recusada. Isso estende a cadeia de dependência para: Empresa →
 Enriquecimento → Diagnóstico → Estratégia → Planejamento do site →
-Arquitetura de páginas → Conteúdo → Tema visual.
+Arquitetura de páginas → Conteúdo → Tema visual → Preview do site.
 
 Assim como em todos os módulos anteriores, não há exclusão nesta versão
 (apenas upsert).
@@ -346,3 +346,27 @@ nesta issue todo tema é preenchido manualmente pelo operador.
 Acesso isolado via `SiteThemeRepository` em
 `src/server/persistence/site-theme-repository.ts`, consumido pelo módulo
 `src/modules/design` (mesmo módulo da arquitetura de páginas — ver §7).
+
+---
+
+# 10. Preview do site (Issue #20)
+
+**Não introduz nenhuma tabela nova.** É a primeira fatia do módulo
+`site-builder`: uma camada de leitura e composição sobre os dados já
+persistidos pelas Issues #14, #16 e #18 (`company_site_pages`,
+`company_site_page_sections`, `company_site_page_section_copies`,
+`company_site_themes`), sem escrever nada novo no banco.
+
+O preview exige que a empresa tenha ao menos uma página na arquitetura
+(Issue #14); conteúdo (Issue #16) e tema (Issue #18) são contexto
+opcional — quando ausentes, a composição usa como *fallback* o
+nome/objetivo da própria seção e nenhuma variável de tema, em vez de
+bloquear a exibição. Isso estende a cadeia de dependência para: Empresa
+→ Enriquecimento → Diagnóstico → Estratégia → Planejamento do site →
+Arquitetura de páginas → Conteúdo → Tema visual → Preview do site.
+
+A montagem (`buildSitePreview`, em
+`src/modules/site-builder/service.ts`) é uma função pura: recebe os
+dados já buscados via `designService`/`copyService` e devolve a
+estrutura pronta para renderização, sem tocar o banco — o que a torna
+testável sem precisar de um banco `:memory:`.
