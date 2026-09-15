@@ -1,10 +1,16 @@
 import {
+  COLOR_MODE_KEYS,
+  type ColorModeKey,
   JOURNEY_STAGE_KEYS,
   type JourneyStageKey,
   type SitePageFieldErrors,
   type SitePageFormInput,
   type SitePageSectionFieldErrors,
   type SitePageSectionFormInput,
+  type SiteThemeFieldErrors,
+  type SiteThemeFormInput,
+  SPACING_DENSITY_KEYS,
+  type SpacingDensityKey,
 } from "@/modules/design/types";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -152,6 +158,83 @@ export function validateSitePageSectionInput(
       objective: normalizeOptional(input.objective),
       ctaReference: normalizeOptional(input.ctaReference),
       position: position ?? null,
+    },
+  };
+}
+
+export type ValidatedSiteTheme = {
+  companyId: string;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  backgroundColor: string | null;
+  headingFont: string | null;
+  bodyFont: string | null;
+  visualStyle: string | null;
+  colorModePreference: ColorModeKey | null;
+  spacingDensity: SpacingDensityKey | null;
+  ctaVisualGuidelines: string | null;
+  visualReferences: string | null;
+  accessibilityRequirements: string | null;
+  notes: string | null;
+};
+
+export type SiteThemeValidationResult =
+  | { success: true; data: ValidatedSiteTheme }
+  | { success: false; errors: SiteThemeFieldErrors };
+
+export function validateSiteThemeInput(
+  input: SiteThemeFormInput,
+): SiteThemeValidationResult {
+  const errors: SiteThemeFieldErrors = {};
+
+  const companyId = input.companyId.trim();
+  if (!companyId) {
+    errors.companyId = "Empresa não informada.";
+  }
+
+  const colorModeInput = input.colorModePreference.trim();
+  const colorModePreference = colorModeInput === "" ? null : colorModeInput;
+  if (
+    colorModePreference !== null &&
+    !(COLOR_MODE_KEYS as readonly string[]).includes(colorModePreference)
+  ) {
+    errors.colorModePreference = "Selecione um modo de cor válido.";
+  }
+
+  const spacingDensityInput = input.spacingDensity.trim();
+  const spacingDensity =
+    spacingDensityInput === "" ? null : spacingDensityInput;
+  if (
+    spacingDensity !== null &&
+    !(SPACING_DENSITY_KEYS as readonly string[]).includes(spacingDensity)
+  ) {
+    errors.spacingDensity = "Selecione uma densidade de espaçamento válida.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      companyId,
+      primaryColor: normalizeOptional(input.primaryColor),
+      secondaryColor: normalizeOptional(input.secondaryColor),
+      accentColor: normalizeOptional(input.accentColor),
+      backgroundColor: normalizeOptional(input.backgroundColor),
+      headingFont: normalizeOptional(input.headingFont),
+      bodyFont: normalizeOptional(input.bodyFont),
+      visualStyle: normalizeOptional(input.visualStyle),
+      colorModePreference: colorModePreference as ColorModeKey | null,
+      spacingDensity: spacingDensity as SpacingDensityKey | null,
+      ctaVisualGuidelines: normalizeOptional(input.ctaVisualGuidelines),
+      visualReferences: normalizeOptional(input.visualReferences),
+      accessibilityRequirements: normalizeOptional(
+        input.accessibilityRequirements,
+      ),
+      notes: normalizeOptional(input.notes),
     },
   };
 }

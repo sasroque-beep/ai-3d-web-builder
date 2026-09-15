@@ -6,10 +6,15 @@ import type {
   SitePageSectionFieldErrors,
   SitePageSectionFormInput,
   SitePageSectionRecord,
+  SiteThemeFieldErrors,
+  SiteThemeFormInput,
+  SiteThemeRecord,
+  ThemeEligibility,
 } from "@/modules/design/types";
 import {
   validateSitePageInput,
   validateSitePageSectionInput,
+  validateSiteThemeInput,
 } from "@/modules/design/validation";
 import type { SitePlanRecord } from "@/modules/site-planning/types";
 import type {
@@ -22,6 +27,11 @@ import type {
   SitePageSectionRepository,
 } from "@/server/persistence/site-page-section-repository";
 import { sitePageSectionRepository } from "@/server/persistence/site-page-section-repository";
+import type {
+  CompanySiteTheme,
+  SiteThemeRepository,
+} from "@/server/persistence/site-theme-repository";
+import { siteThemeRepository } from "@/server/persistence/site-theme-repository";
 
 export type UpsertSitePageResult =
   | { success: true; data: SitePageRecord }
@@ -33,6 +43,11 @@ export type UpsertSitePageSectionResult =
   | { success: false; errors: SitePageSectionFieldErrors }
   | { success: false; ineligible: true; reason: string };
 
+export type UpsertSiteThemeResult =
+  | { success: true; data: SiteThemeRecord }
+  | { success: false; errors: SiteThemeFieldErrors }
+  | { success: false; ineligible: true; reason: string };
+
 function toSitePageRecord(row: CompanySitePage): SitePageRecord {
   return row;
 }
@@ -40,6 +55,10 @@ function toSitePageRecord(row: CompanySitePage): SitePageRecord {
 function toSitePageSectionRecord(
   row: CompanySitePageSection,
 ): SitePageSectionRecord {
+  return row;
+}
+
+function toSiteThemeRecord(row: CompanySiteTheme): SiteThemeRecord {
   return row;
 }
 
@@ -80,9 +99,29 @@ export function checkSectionEligibility(
   return { eligible: true };
 }
 
+/**
+ * A theme only makes sense once the company has a page architecture to
+ * apply it to (Issue #18 depends on Issue #14), so creating/updating it is
+ * gated on at least one page existing for the company.
+ */
+export function checkThemeEligibility(
+  pages: SitePageRecord[],
+): ThemeEligibility {
+  if (pages.length === 0) {
+    return {
+      eligible: false,
+      reason:
+        "Defina a arquitetura de páginas da empresa antes de configurar o tema visual do site.",
+    };
+  }
+
+  return { eligible: true };
+}
+
 export function createDesignService(
   pageRepository: SitePageRepository = sitePageRepository,
   sectionRepository: SitePageSectionRepository = sitePageSectionRepository,
+  themeRepository: SiteThemeRepository = siteThemeRepository,
 ) {
   return {
     async upsertPage(
@@ -162,6 +201,33 @@ export function createDesignService(
     ): Promise<SitePageSectionRecord | undefined> {
       const row = await sectionRepository.getById(sectionId);
       return row ? toSitePageSectionRecord(row) : undefined;
+    },
+
+    async upsertTheme(
+      input: SiteThemeFormInput,
+      pages: SitePageRecord[],
+    ): Promise<UpsertSiteThemeResult> {
+      const eligibility = checkThemeEligibility(pages);
+      if (!eligibility.eligible) {
+        return { success: false, ineligible: true, reason: eligibility.reason };
+      }
+
+      const validation = validateSiteThemeInput(input);
+      if (!validation.success) {
+        return { success: false, errors: validation.errors };
+      }
+
+      const saved = await themeRepository.upsert({
+        ...validation.data,
+        generatedBy: "manual",
+      });
+
+      return { success: true, data: toSiteThemeRecord(saved) };
+    },
+
+    async getTheme(companyId: string): Promise<SiteThemeRecord | undefined> {
+      const row = await themeRepository.getByCompanyId(companyId);
+      return row ? toSiteThemeRecord(row) : undefined;
     },
   };
 }

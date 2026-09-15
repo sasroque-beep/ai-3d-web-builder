@@ -50,6 +50,13 @@
       "when": 1789494559518,
       "tag": "0006_awesome_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789497500295,
+      "tag": "0007_famous_pet_avengers",
+      "breakpoints": true
     }
   ]
 }

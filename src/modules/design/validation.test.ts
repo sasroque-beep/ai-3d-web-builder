@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import type {
   SitePageFormInput,
   SitePageSectionFormInput,
+  SiteThemeFormInput,
 } from "@/modules/design/types";
 import {
   validateSitePageInput,
   validateSitePageSectionInput,
+  validateSiteThemeInput,
 } from "@/modules/design/validation";
 
 function validPageInput(
@@ -33,6 +35,28 @@ function validSectionInput(
     objective: "Comunicar a proposta de valor imediatamente.",
     ctaReference: "Peça agora",
     position: "1",
+    ...overrides,
+  };
+}
+
+function validThemeInput(
+  overrides: Partial<SiteThemeFormInput> = {},
+): SiteThemeFormInput {
+  return {
+    companyId: "company-1",
+    primaryColor: "#8B5E3C",
+    secondaryColor: "#F4E9DA",
+    accentColor: "#D97706",
+    backgroundColor: "#FFFDF9",
+    headingFont: "Fraunces",
+    bodyFont: "Inter",
+    visualStyle: "Acolhedor e artesanal",
+    colorModePreference: "light",
+    spacingDensity: "comfortable",
+    ctaVisualGuidelines: "Botão sólido laranja, cantos arredondados",
+    visualReferences: "Padarias artesanais europeias",
+    accessibilityRequirements: "Contraste mínimo AA",
+    notes: "Priorizar mobile-first.",
     ...overrides,
   };
 }
@@ -163,6 +187,88 @@ describe("validateSitePageSectionInput", () => {
       expect(result.data.objective).toBeNull();
       expect(result.data.ctaReference).toBeNull();
       expect(result.data.position).toBeNull();
+    }
+  });
+});
+
+describe("validateSiteThemeInput", () => {
+  it("accepts a fully filled input", () => {
+    const result = validateSiteThemeInput(validThemeInput());
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.primaryColor).toBe("#8B5E3C");
+      expect(result.data.colorModePreference).toBe("light");
+      expect(result.data.spacingDensity).toBe("comfortable");
+    }
+  });
+
+  it("requires companyId", () => {
+    const result = validateSiteThemeInput(validThemeInput({ companyId: "" }));
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errors.companyId).toBeDefined();
+    }
+  });
+
+  it("rejects an invalid color mode preference", () => {
+    const result = validateSiteThemeInput(
+      validThemeInput({ colorModePreference: "rainbow" }),
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errors.colorModePreference).toBeDefined();
+    }
+  });
+
+  it("rejects an invalid spacing density", () => {
+    const result = validateSiteThemeInput(
+      validThemeInput({ spacingDensity: "huge" }),
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errors.spacingDensity).toBeDefined();
+    }
+  });
+
+  it("accepts every optional field blank", () => {
+    const result = validateSiteThemeInput(
+      validThemeInput({
+        primaryColor: "",
+        secondaryColor: "",
+        accentColor: "",
+        backgroundColor: "",
+        headingFont: "",
+        bodyFont: "",
+        visualStyle: "",
+        colorModePreference: "",
+        spacingDensity: "",
+        ctaVisualGuidelines: "",
+        visualReferences: "",
+        accessibilityRequirements: "",
+        notes: "",
+      }),
+    );
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.primaryColor).toBeNull();
+      expect(result.data.colorModePreference).toBeNull();
+      expect(result.data.spacingDensity).toBeNull();
+    }
+  });
+
+  it("trims surrounding whitespace from optional fields", () => {
+    const result = validateSiteThemeInput(
+      validThemeInput({ primaryColor: "  #8B5E3C  " }),
+    );
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.primaryColor).toBe("#8B5E3C");
     }
   });
 });

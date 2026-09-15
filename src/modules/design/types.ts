@@ -92,3 +92,83 @@ export interface SitePageSectionRecord {
   createdAt: string;
   updatedAt: string;
 }
+
+export const COLOR_MODE_KEYS = ["light", "dark", "both"] as const;
+
+export type ColorModeKey = (typeof COLOR_MODE_KEYS)[number];
+
+export const COLOR_MODE_LABELS: Record<ColorModeKey, string> = {
+  light: "Claro",
+  dark: "Escuro",
+  both: "Ambos",
+};
+
+export const SPACING_DENSITY_KEYS = [
+  "compact",
+  "comfortable",
+  "spacious",
+] as const;
+
+export type SpacingDensityKey = (typeof SPACING_DENSITY_KEYS)[number];
+
+export const SPACING_DENSITY_LABELS: Record<SpacingDensityKey, string> = {
+  compact: "Compacto",
+  comfortable: "Confortável",
+  spacious: "Generoso",
+};
+
+/** Raw string values as they arrive from an HTML form submission. */
+export interface SiteThemeFormInput {
+  companyId: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  backgroundColor: string;
+  headingFont: string;
+  bodyFont: string;
+  visualStyle: string;
+  colorModePreference: string;
+  spacingDensity: string;
+  ctaVisualGuidelines: string;
+  visualReferences: string;
+  accessibilityRequirements: string;
+  notes: string;
+}
+
+export type SiteThemeFieldErrors = Partial<
+  Record<keyof SiteThemeFormInput, string>
+>;
+
+export type UpsertSiteThemeActionState =
+  | { status: "idle" }
+  | { status: "error"; errors: SiteThemeFieldErrors }
+  | { status: "ineligible"; reason: string };
+
+export const initialUpsertSiteThemeActionState: UpsertSiteThemeActionState = {
+  status: "idle",
+};
+
+export interface SiteThemeRecord {
+  id: string;
+  companyId: string;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  backgroundColor: string | null;
+  headingFont: string | null;
+  bodyFont: string | null;
+  visualStyle: string | null;
+  colorModePreference: ColorModeKey | null;
+  spacingDensity: SpacingDensityKey | null;
+  ctaVisualGuidelines: string | null;
+  visualReferences: string | null;
+  accessibilityRequirements: string | null;
+  notes: string | null;
+  generatedBy: "manual" | "ai";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ThemeEligibility =
+  | { eligible: true }
+  | { eligible: false; reason: string };
