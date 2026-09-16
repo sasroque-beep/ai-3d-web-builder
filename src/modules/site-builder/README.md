@@ -1,8 +1,9 @@
 # Site Builder
 
-> Status: **in progress** — read-only site preview implemented (Issue
-> #20). Editing, export/render pipeline and page/section/component
-> generation are still planned.
+> Status: **in progress** — site preview implemented (Issue #20), with
+> inline editing of section content from the preview (Issue #22).
+> Export/render pipeline and page/section/component generation are
+> still planned.
 
 ## Responsibility
 
@@ -28,6 +29,23 @@ and components, and support later editing of the generated site.
 
 This issue introduces **no new persistence** — it only reads data
 already stored by `design` and `copy` and composes it for rendering.
+
+## Implemented (Issue #22)
+
+- `SectionPreview.copy` now also carries the section's raw content
+  record (or `null`), alongside the display fields already there — used
+  to pre-fill an edit form without ever substituting the section's
+  name/objective fallback as if it were authored copy.
+- `SectionEditForm.tsx` (`src/app/leads/[id]/site-builder/`) — a
+  single-section content form (no page/section picker, unlike
+  `../copy`'s `SectionCopyForm`) that reuses the exact same
+  `upsertSectionCopyAction` and persistence as Issue #16. No new
+  persistence, no new eligibility rule.
+- `SitePreviewViewer` gained an "Editar" toggle per section, swapping
+  that section's read view for `SectionEditForm` in place; switching
+  pages exits any open edit. `upsertSectionCopyAction`
+  (`src/modules/copy/actions.ts`) now revalidates both `/copy` and
+  `/site-builder` so the two screens never fall out of sync.
 
 ## Belongs here
 

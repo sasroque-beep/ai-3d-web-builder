@@ -302,6 +302,11 @@ Acesso isolado via `SectionCopyRepository` em
 `src/server/persistence/section-copy-repository.ts`, consumido pelo
 módulo `src/modules/copy`.
 
+Desde a Issue #22, este mesmo conteúdo também pode ser criado/atualizado
+a partir do preview do site (§10), através de um formulário inline que
+chama exatamente a mesma `upsertSectionCopyAction` — sem tabela,
+validação ou regra de elegibilidade novas.
+
 ---
 
 # 9. Tema visual e diretrizes de design (Issue #18)

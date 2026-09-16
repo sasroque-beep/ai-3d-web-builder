@@ -47,6 +47,16 @@ function toSectionPreview(
     ctaLabel: copy?.ctaLabel ?? section.ctaReference ?? null,
     socialProofText: copy?.socialProofText ?? null,
     hasContent: Boolean(copy),
+    copy: copy
+      ? {
+          headline: copy.headline,
+          subheadline: copy.subheadline,
+          body: copy.body,
+          ctaLabel: copy.ctaLabel,
+          socialProofText: copy.socialProofText,
+          notes: copy.notes,
+        }
+      : null,
   };
 }
 

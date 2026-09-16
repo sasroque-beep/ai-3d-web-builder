@@ -44,7 +44,11 @@ export async function upsertSectionCopyAction(
   if (section) {
     const page = await designService.getPageById(section.pageId);
     if (page) {
+      // Content can be edited both from the dedicated /copy screen and
+      // inline from the /site-builder preview (Issue #22) — keep both in
+      // sync regardless of where the edit happened.
       revalidatePath(`/leads/${page.companyId}/copy`);
+      revalidatePath(`/leads/${page.companyId}/site-builder`);
     }
   }
   return { status: "idle" };
