@@ -119,6 +119,14 @@ describe("buildSitePreview", () => {
     expect(renderedSection.subheading).toBe("Direto do forno para a sua mesa.");
     expect(renderedSection.ctaLabel).toBe("Peça agora");
     expect(renderedSection.hasContent).toBe(true);
+    expect(renderedSection.copy).toEqual({
+      headline: "Pão fresco todos os dias",
+      subheadline: "Direto do forno para a sua mesa.",
+      body: "Produzimos nosso pão artesanal diariamente.",
+      ctaLabel: "Peça agora",
+      socialProofText: "Mais de 500 clientes satisfeitos.",
+      notes: null,
+    });
   });
 
   it("falls back to the section's name/objective when it has no content yet", () => {
@@ -140,6 +148,7 @@ describe("buildSitePreview", () => {
     );
     expect(renderedSection.ctaLabel).toBe("Peça agora");
     expect(renderedSection.hasContent).toBe(false);
+    expect(renderedSection.copy).toBeNull();
   });
 
   it("returns a null theme when the company has none yet", () => {

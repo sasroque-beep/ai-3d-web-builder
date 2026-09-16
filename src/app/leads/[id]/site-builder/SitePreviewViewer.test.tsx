@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/modules/copy/actions", () => ({
+  upsertSectionCopyAction: vi.fn(),
+}));
 
 import { SitePreviewViewer } from "@/app/leads/[id]/site-builder/SitePreviewViewer";
 import type { SitePreview } from "@/modules/site-builder/types";
@@ -30,6 +34,14 @@ function basePreview(overrides: Partial<SitePreview> = {}): SitePreview {
             ctaLabel: "Peça agora",
             socialProofText: null,
             hasContent: true,
+            copy: {
+              headline: "Pão fresco todos os dias",
+              subheadline: "Direto do forno para a sua mesa.",
+              body: "Produzimos nosso pão artesanal diariamente.",
+              ctaLabel: "Peça agora",
+              socialProofText: null,
+              notes: null,
+            },
           },
         ],
       },
@@ -51,6 +63,7 @@ function basePreview(overrides: Partial<SitePreview> = {}): SitePreview {
             ctaLabel: null,
             socialProofText: null,
             hasContent: false,
+            copy: null,
           },
         ],
       },
@@ -133,5 +146,39 @@ describe("SitePreviewViewer", () => {
     expect(wrapper.style.getPropertyValue("--preview-primary")).toBe("#8B5E3C");
     expect(wrapper.style.getPropertyValue("--preview-accent")).toBe("#D97706");
     expect(wrapper.style.getPropertyValue("--preview-secondary")).toBe("");
+  });
+
+  it("switches a section into edit mode and back", async () => {
+    const user = userEvent.setup();
+    render(<SitePreviewViewer preview={basePreview()} />);
+
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+
+    expect(screen.getByLabelText("Título/headline")).toHaveValue(
+      "Pão fresco todos os dias",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Pão fresco todos os dias" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Título/headline")).not.toBeInTheDocument();
+  });
+
+  it("exits edit mode when switching to a different page", async () => {
+    const user = userEvent.setup();
+    render(<SitePreviewViewer preview={basePreview()} />);
+
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+    expect(screen.getByLabelText("Título/headline")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Contato" }));
+    await user.click(screen.getByRole("tab", { name: "Página inicial" }));
+
+    expect(screen.queryByLabelText("Título/headline")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Pão fresco todos os dias" }),
+    ).toBeInTheDocument();
   });
 });

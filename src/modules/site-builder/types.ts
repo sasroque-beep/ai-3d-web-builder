@@ -4,6 +4,15 @@ import type {
   SpacingDensityKey,
 } from "@/modules/design/types";
 
+export interface SectionPreviewCopy {
+  headline: string | null;
+  subheadline: string | null;
+  body: string | null;
+  ctaLabel: string | null;
+  socialProofText: string | null;
+  notes: string | null;
+}
+
 export interface SectionPreview {
   id: string;
   sectionKey: string;
@@ -14,6 +23,14 @@ export interface SectionPreview {
   ctaLabel: string | null;
   socialProofText: string | null;
   hasContent: boolean;
+  /**
+   * The raw, unmodified content record (or `null` when none exists yet) —
+   * for pre-filling an edit form. Unlike the display fields above, this
+   * never falls back to the section's name/objective: editing without
+   * changing anything must not persist the architecture's placeholder
+   * text as if it were authored copy.
+   */
+  copy: SectionPreviewCopy | null;
 }
 
 export interface PagePreview {
