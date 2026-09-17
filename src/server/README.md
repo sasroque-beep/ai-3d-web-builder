@@ -17,4 +17,6 @@ Rules:
   ([`AGENTS.md`](../../AGENTS.md) §13)
 
 Status: **in progress** — `db/` and `persistence/company-repository.ts`
-implemented (Issue #4); auth and third-party integrations still planned.
+implemented (Issue #4), extended with a repository per domain module
+since (most recently `experience-3d-scene-config-repository.ts`, Issue
+#33); auth and third-party integrations still planned.

@@ -7,7 +7,8 @@
 > `FULL_3D`/`REDUCED_3D`/`FALLBACK_2D` decision function implemented in
 > `src/lib/capability` (Issue #28). The scene config data contract
 > (`types.ts`/`validation.ts`/eligibility) is implemented (Issue #30).
-> No persistence, no real preset and no integration with
+> Persistence (table, repository, CRUD in `service.ts`) is implemented
+> (Issue #33). No real preset, no editing UI and no integration with
 > `site-builder` yet.
 
 ## Responsibility
@@ -90,6 +91,23 @@ performance, accessibility, conversion or mobile (see
   check the same way every other section-scoped module already does.
 - No persistence, no repository, no real preset, no integration with
   `site-builder` yet.
+
+## Implemented (Issue #33)
+
+- `src/server/db/schema.ts` — `company_site_page_section_experiences`:
+  one optional row per section (unique index on `section_id`, upsert),
+  same shape as `company_site_page_section_copies`. `config` uses
+  Drizzle's `text(..., { mode: "json" })`, so domain code never touches
+  the serialized string directly.
+- `src/server/persistence/experience-3d-scene-config-repository.ts` —
+  `upsert`/`getBySectionId`, structurally identical to
+  `section-copy-repository.ts`.
+- `service.ts` — `createExperience3DService`/`experience3DService`:
+  `upsertSceneConfig` (eligibility → validation → persistence) and
+  `getSceneConfig`, same shape as `copyService`.
+- `docs/DATABASE.md` §11 documents the table.
+- No `actions.ts`/server action and no UI yet — that's the manual
+  editing Issue, once there's an actual form to wire one to.
 
 ## Confirmed architectural decisions (Issue #26)
 

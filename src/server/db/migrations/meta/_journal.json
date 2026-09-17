@@ -57,6 +57,13 @@
       "when": 1789497500295,
       "tag": "0007_famous_pet_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789684685199,
+      "tag": "0008_perfect_zombie",
+      "breakpoints": true
     }
   ]
 }

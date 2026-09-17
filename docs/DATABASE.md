@@ -375,3 +375,48 @@ A montagem (`buildSitePreview`, em
 dados já buscados via `designService`/`copyService` e devolve a
 estrutura pronta para renderização, sem tocar o banco — o que a torna
 testável sem precisar de um banco `:memory:`.
+
+---
+
+# 11. Configuração de experiência 3D (Issue #33)
+
+Segue o padrão mais simples de "um registro opcional por seção" já
+usado por `company_site_page_section_copies` (§8): a tabela
+`company_site_page_section_experiences` guarda uma linha por seção
+(`id`, `section_id`, `preset_key`, `config`, `fallback_2d_image_url`,
+`fallback_2d_image_alt`, `generated_by`, timestamps), com índice único
+em `section_id` — upsert: reenviar o mesmo `section_id` atualiza a
+configuração em vez de duplicá-la.
+
+`preset_key` é texto livre validado como slug (Issue #30) — ainda não
+há um enum fechado de presets, porque nenhum preset real existe. `config`
+é o payload de dados da cena, validado como objeto JSON serializável
+(Issue #30) e persistido via `text(..., { mode: "json" })` do Drizzle,
+que cuida da serialização/parse automaticamente — o código de domínio
+nunca manipula a string JSON diretamente. `fallback_2d_image_url` e
+`fallback_2d_image_alt` são colunas simples e **obrigatórias**: não é
+possível persistir uma configuração de experiência 3D sem um fallback
+2D funcional, mesma regra já validada na Issue #30.
+
+A configuração de uma seção só pode ser criada/atualizada quando a
+seção correspondente já existe na arquitetura de páginas (Issue #14) —
+mesma regra e mesmo formato de elegibilidade que `copy` já usa
+(`checkExperience3DEligibility`, reaproveitando `SitePageSectionRecord`
+de `design` exatamente como `copy/service.ts` faz). Não há uma segunda
+checagem subindo até o planejamento estratégico ou a empresa, pelo
+mesmo motivo já documentado nas Issues anteriores.
+
+Assim como em todos os módulos anteriores, não há exclusão nesta
+versão (apenas upsert).
+
+`generated_by` (`manual` | `ai`, default `manual`) reserva, sem exigir
+nova migration, a futura geração automática por um agente/modelo de
+IA — nesta issue toda configuração é preenchida manualmente pelo
+operador.
+
+Acesso isolado via `Experience3DSceneConfigRepository` em
+`src/server/persistence/experience-3d-scene-config-repository.ts`,
+consumido pelo módulo `src/modules/experience-3d`
+(`createExperience3DService`/`experience3DService`). Esta Issue não
+introduz nenhuma server action nem UI — isso fica para a Issue de
+edição manual no `site-builder`.
