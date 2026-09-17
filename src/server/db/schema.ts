@@ -342,3 +342,34 @@ export const companySiteThemes = sqliteTable(
 
 export type CompanySiteThemeRow = typeof companySiteThemes.$inferSelect;
 export type NewCompanySiteThemeRow = typeof companySiteThemes.$inferInsert;
+
+export const companySitePageSectionExperiences = sqliteTable(
+  "company_site_page_section_experiences",
+  {
+    id: text("id").primaryKey(),
+    sectionId: text("section_id")
+      .notNull()
+      .references(() => companySitePageSections.id),
+    presetKey: text("preset_key").notNull(),
+    config: text("config", { mode: "json" })
+      .notNull()
+      .$type<Record<string, unknown>>(),
+    fallback2dImageUrl: text("fallback_2d_image_url").notNull(),
+    fallback2dImageAlt: text("fallback_2d_image_alt").notNull(),
+    generatedBy: text("generated_by", { enum: ["manual", "ai"] })
+      .notNull()
+      .default("manual"),
+    createdAt: text("created_at").notNull().default(sql`(current_timestamp)`),
+    updatedAt: text("updated_at").notNull().default(sql`(current_timestamp)`),
+  },
+  (table) => [
+    uniqueIndex("company_site_page_section_experiences_section_id_idx").on(
+      table.sectionId,
+    ),
+  ],
+);
+
+export type CompanySitePageSectionExperienceRow =
+  typeof companySitePageSectionExperiences.$inferSelect;
+export type NewCompanySitePageSectionExperienceRow =
+  typeof companySitePageSectionExperiences.$inferInsert;
