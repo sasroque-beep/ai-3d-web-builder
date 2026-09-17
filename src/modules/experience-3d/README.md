@@ -3,7 +3,9 @@
 > Status: **in progress** — technical foundation (Issue #24): React
 > Three Fiber + Drei installed and validated with an isolated
 > smoke-test scene. Architectural decisions governing every future
-> Issue documented below (Issue #26). No scene config contract,
+> Issue documented below (Issue #26). Capability detection and the
+> `FULL_3D`/`REDUCED_3D`/`FALLBACK_2D` decision function implemented in
+> `src/lib/capability` (Issue #28). No scene config contract,
 > persistence or integration with `site-builder` yet.
 
 ## Responsibility
@@ -47,6 +49,21 @@ performance, accessibility, conversion or mobile (see
   { ssr: false })`, so the Three.js/R3F/Drei bundle never reaches any
   product route. No integration with `site-builder`, `design` or
   persistence — that is explicitly out of scope for this issue.
+
+## Implemented (Issue #28)
+
+- `src/lib/capability/` — framework-agnostic, SSR-safe capability
+  detection: `detectWebglSupport`, `detectPrefersReducedMotion`,
+  `detectDeviceTier` (only ever asserts `"low"` on a technically
+  reliable signal — a low core count or an explicit save-data/slow
+  connection hint — never claims a device is capable, treating every
+  other case as `"unknown"`), and the pure decision function
+  `resolveExperienceMode`, which combines those signals (plus a
+  reserved runtime-failure flag and a reserved performance-policy
+  override) into one of `FULL_3D` / `REDUCED_3D` / `FALLBACK_2D`.
+- No React/R3F/Drei/`experience-3d` import in this module — it lives
+  entirely in `src/lib`, consumed later by whatever mounts the actual
+  `<Canvas>` (a future `site-builder` integration issue).
 
 ## Confirmed architectural decisions (Issue #26)
 
