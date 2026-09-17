@@ -5,8 +5,10 @@
 > smoke-test scene. Architectural decisions governing every future
 > Issue documented below (Issue #26). Capability detection and the
 > `FULL_3D`/`REDUCED_3D`/`FALLBACK_2D` decision function implemented in
-> `src/lib/capability` (Issue #28). No scene config contract,
-> persistence or integration with `site-builder` yet.
+> `src/lib/capability` (Issue #28). The scene config data contract
+> (`types.ts`/`validation.ts`/eligibility) is implemented (Issue #30).
+> No persistence, no real preset and no integration with
+> `site-builder` yet.
 
 ## Responsibility
 
@@ -64,6 +66,30 @@ performance, accessibility, conversion or mobile (see
 - No React/R3F/Drei/`experience-3d` import in this module — it lives
   entirely in `src/lib`, consumed later by whatever mounts the actual
   `<Canvas>` (a future `site-builder` integration issue).
+
+## Implemented (Issue #30)
+
+- `types.ts` — `Experience3DSceneConfig`/`Experience3DSceneConfigInput`
+  (config is inherently a JSON object, not a form-textarea string),
+  `Experience3DFallback2D` (image + alt text, both required — no
+  config value can exist without a working 2D fallback), and
+  `Experience3DEligibility`.
+- `validation.ts` — `validateExperience3DSceneConfigInput`: `presetKey`
+  validated as a slug (no closed enum yet — no real preset exists to
+  enumerate), `config` validated as a plain JSON-serializable object
+  (rejects functions/class instances — never arbitrary code),
+  `fallback2d.imageUrl`/`imageAlt` both required.
+- `service.ts` — `checkExperience3DEligibility(section)`: a 3D
+  experience can only be configured for a section that already exists
+  in the page architecture, reusing `SitePageSectionRecord` from
+  `../design/types` exactly like `../copy/service.ts`'s
+  `checkSectionContentEligibility` does. This isn't a violation of this
+  module's isolation decision (below) — that decision is about the
+  renderer (R3F/Drei/Three.js) never leaking outward, not about
+  importing the page-architecture section type for an eligibility
+  check the same way every other section-scoped module already does.
+- No persistence, no repository, no real preset, no integration with
+  `site-builder` yet.
 
 ## Confirmed architectural decisions (Issue #26)
 
@@ -142,6 +168,8 @@ conversation history in each new Issue.
   unit-tested today, see `SmokeTestScene.test.tsx`).
 - Whether/how `experience3dOpportunities`
   (`../site-planning/types.ts`) gets structured beyond free text.
+- Closing `presetKey` into a fixed enum — deferred until the first real
+  preset exists (Issue #30 validates it only as a slug).
 
 ## Depends on
 
