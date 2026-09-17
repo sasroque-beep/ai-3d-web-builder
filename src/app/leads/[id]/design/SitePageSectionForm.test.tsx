@@ -52,7 +52,7 @@ describe("SitePageSectionForm", () => {
     render(<SitePageSectionForm pages={pages} />);
     await user.click(screen.getByRole("button", { name: "Salvar seção" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Não foi possível salvar a seção",
     );
   });

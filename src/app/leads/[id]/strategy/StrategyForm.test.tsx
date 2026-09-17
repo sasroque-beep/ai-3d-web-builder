@@ -98,7 +98,7 @@ describe("StrategyForm", () => {
     render(<StrategyForm companyId="company-1" strategy={null} />);
     await user.click(screen.getByRole("button", { name: "Salvar estratégia" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Não foi possível salvar a estratégia",
     );
   });

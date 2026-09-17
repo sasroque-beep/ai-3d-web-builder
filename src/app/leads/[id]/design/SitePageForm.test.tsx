@@ -37,7 +37,7 @@ describe("SitePageForm", () => {
     render(<SitePageForm companyId="company-1" />);
     await user.click(screen.getByRole("button", { name: "Salvar página" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Não foi possível salvar a página",
     );
   });

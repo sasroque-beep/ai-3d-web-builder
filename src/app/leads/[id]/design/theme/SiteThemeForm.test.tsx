@@ -69,7 +69,7 @@ describe("SiteThemeForm", () => {
     render(<SiteThemeForm companyId="company-1" theme={null} />);
     await user.click(screen.getByRole("button", { name: "Salvar tema" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Não foi possível salvar o tema",
     );
   });

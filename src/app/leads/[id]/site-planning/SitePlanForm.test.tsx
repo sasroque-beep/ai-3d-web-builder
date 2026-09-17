@@ -105,7 +105,7 @@ describe("SitePlanForm", () => {
       screen.getByRole("button", { name: "Salvar planejamento" }),
     );
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Não foi possível salvar o planejamento",
     );
   });

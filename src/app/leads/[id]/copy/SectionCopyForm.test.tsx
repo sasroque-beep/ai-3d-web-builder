@@ -70,7 +70,7 @@ describe("SectionCopyForm", () => {
     render(<SectionCopyForm pages={pages} sectionsByPage={sectionsByPage} />);
     await user.click(screen.getByRole("button", { name: "Salvar conteúdo" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       "Não foi possível salvar o conteúdo",
     );
   });
