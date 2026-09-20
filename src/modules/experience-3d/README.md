@@ -8,8 +8,9 @@
 > `src/lib/capability` (Issue #28). The scene config data contract
 > (`types.ts`/`validation.ts`/eligibility) is implemented (Issue #30).
 > Persistence (table, repository, CRUD in `service.ts`) is implemented
-> (Issue #33). No real preset, no editing UI and no integration with
-> `site-builder` yet.
+> (Issue #33). The first real preset (`hero-showcase`, procedural) and
+> the runtime that renders it with a working 2D fallback are implemented
+> (Issue #37). No editing UI and no integration with `site-builder` yet.
 
 ## Responsibility
 
@@ -109,6 +110,112 @@ performance, accessibility, conversion or mobile (see
 - No `actions.ts`/server action and no UI yet — that's the manual
   editing Issue, once there's an actual form to wire one to.
 
+## Implemented (Issue #37)
+
+First real preset and the runtime that executes it. Everything renders
+from the public `Experience3DSceneConfig` contract; the renderer stays
+private to this module.
+
+### Preset registry (renderer-free)
+
+- `presets/types.ts` — `Experience3DPresetDefinition` (`key`, `label`,
+  `parseConfig`) and the props every scene receives.
+- `presets/registry.ts` — `createPresetRegistry(definitions)` and the
+  default `presetRegistry`. **Not an enum**: `presetKey` is still a free
+  slug (Issue #30). `parseConfig(key, config)` answers `unregistered`,
+  `valid` (normalized, defaults applied) or `invalid` (with a message).
+- `service.upsertSceneConfig` runs the preset's validation after the
+  generic Issue #30 validation, and persists the **normalized** config.
+  An **unregistered** `presetKey` is still accepted with any plain-JSON
+  config — `validation.ts` is untouched and old data never becomes
+  unreadable; at runtime such a section simply shows its 2D fallback.
+- `hero-showcase` config (`presets/hero-showcase/config.ts`): `shape`
+  (`icosahedron` | `torus-knot` | `octahedron`), `primaryColor` /
+  `accentColor` (hex only — never a free CSS string), `motionIntensity`
+  (0–1), `particleCount` (integer 0–120). Missing fields get defaults;
+  unknown keys and out-of-range values are rejected.
+
+**Adding a preset** = one definition in `presets/<key>/config.ts`
+registered in `registry.ts`, one scene file `presets/<key>/<Name>Scene.tsx`
+and one `dynamic()` entry in `presets/renderers.ts`. No change to
+`validation.ts`, `service.ts` or `Experience3DView`.
+
+### Runtime
+
+- `useExperienceMode` — hydration-safe: until capabilities are detected
+  in an effect the mode is always `FALLBACK_2D` (what the server
+  rendered). Then `resolveExperienceMode` (Issue #28) decides. Reacts to
+  `prefers-reduced-motion` changes. `reportRuntimeFailure` feeds
+  `runtimeFailureReported`; `modeOverride` feeds the reserved
+  `performancePolicyOverride`.
+- `Experience3DView` — the component a future consumer mounts, given an
+  `Experience3DSceneConfig`. The 2D fallback `<img>` (with its alt) is
+  **always in the DOM** — server render, first client render, no WebGL,
+  even while 3D runs — and the canvas is an `aria-hidden` layer on top,
+  mounted only after detection and lazily loaded. It draws the visual
+  layer only: content and CTAs live outside it, so nothing in the buying
+  journey depends on WebGL.
+- Falls back to 2D on: no WebGL, `webglcontextlost`, a scene render error
+  or a failed lazy-chunk load (`Canvas3DErrorBoundary`), an invalid
+  config, or an unregistered preset. None of these breaks the page.
+- `REDUCED_3D` (reduced motion or a reliably low-end device) renders one
+  static frame: `frameloop="demand"`, DPR 1, no particles, no float/spin.
+  `FULL_3D` also drops to `demand` when `motionIntensity` is 0.
+- `HeroShowcaseScene` — abstract shape + orbital ring + particles, lights
+  only; no models, textures or HDR environment, so the scene makes no
+  network request. Motion runs through `useFrame` (not React state);
+  particle positions are deterministic.
+- `isolation.test.ts` enforces the boundary as a test: only scene files
+  import `three`/`@react-three/*`, nothing outside this module does, and
+  nothing reachable by static imports from `Experience3DView`,
+  `presets/registry.ts`, `service.ts` or `validation.ts` is a scene.
+- Manual validation route: `/dev/experience-3d-hero-showcase` (mode and
+  shape overrides). Like the Issue #24 smoke test, `/dev` routes are part
+  of the production build. Manually checked against a production build in
+  headless Edge: with WebGL the scene renders (`FULL_3D`); with WebGL
+  disabled the 2D fallback shows; the server HTML has the `<img>` + alt,
+  no `<canvas>` and no 3D chunk. **Not** checked in a real browser:
+  animation, the mode/shape override buttons and `REDUCED_3D` visually —
+  that is what the future E2E Issue is for.
+
+### Bundle impact (measured, Issue #37)
+
+Method: `next build` on `main` (`b5b5444`) vs. this branch; sizes are
+**gzip bytes** of the JS the browser fetches, taken from
+`app-build-manifest.json` (route first load) and
+`react-loadable-manifest.json` (each `dynamic()` import's chunks). Next's
+own "First Load JS" figures are rounded to 1 kB and shift by ±1 kB
+between identical builds (e.g. `/leads/[id]/site-builder` printed 108 kB
+on one `main` build and 109 kB on another), so exact bytes are used.
+
+| Route | Before | After |
+| --- | --- | --- |
+| `/` | 142,732 | 142,542 |
+| `/leads/[id]/site-builder` (largest product route) | 148,579 | 148,379 |
+| `/leads/new` | 144,467 | 144,289 |
+| `/dev/experience-3d-smoke-test` | 144,195 | 144,032 |
+| `/dev/experience-3d-hero-showcase` (new) | — | 146,270 |
+
+All 13 routes that don't render 3D moved by −175 to −200 bytes (no
+increase); the shared First Load JS stays at Next's 103 kB. Three.js,
+R3F and Drei are only in lazy chunks, loaded when the hero-showcase scene
+is first mounted:
+
+| Lazy payload | Raw | gzip |
+| --- | --- | --- |
+| Smoke test scene (before; includes Drei `OrbitControls`) | 932,564 | 246,976 |
+| `hero-showcase` scene (after) | 919,762 | 243,630 |
+| of which Three/R3F/Drei vendor chunks (unchanged) | 903,268 | 236,955 |
+| of which preset-specific (scene + shared R3F helper) | 16,494 | 6,675 |
+
+The route's own eager code (registry, hook, view, boundary, demo) is the
+only thing added to a page that mounts the view: +2.2 kB gzip over the
+smoke-test route. Drei's `Float` was kept after measuring: it lives in
+the 1.5 kB-gzip scene chunk. The ≈ 244 kB-gzip lazy vendor payload is the
+real cost of any 3D preset. Only `FALLBACK_2D` (no WebGL, failure, invalid
+config) avoids it entirely — `REDUCED_3D` still mounts the scene, so it
+saves GPU/CPU work, not download size.
+
 ## Confirmed architectural decisions (Issue #26)
 
 These decisions are binding for every future Issue in this module
@@ -182,12 +289,21 @@ conversation history in each new Issue.
 - Concrete shape of the 3D asset storage/CDN (deferred above, not
   resolved).
 - Playwright/E2E adoption for validating real 3D scenes (Vitest +
-  jsdom has no WebGL context; only composition/import logic is
-  unit-tested today, see `SmokeTestScene.test.tsx`).
+  jsdom has no WebGL context; only composition, mode logic and import
+  boundaries are unit-tested today, see `SmokeTestScene.test.tsx` and
+  `presets/hero-showcase/HeroShowcaseScene.test.tsx`). The actual WebGL
+  rendering of `hero-showcase` is validated manually on the dev route; a
+  dedicated Issue for real visual/E2E tests is to be registered.
 - Whether/how `experience3dOpportunities`
   (`../site-planning/types.ts`) gets structured beyond free text.
-- Closing `presetKey` into a fixed enum — deferred until the first real
-  preset exists (Issue #30 validates it only as a slug).
+- Closing `presetKey` into a fixed enum — still deferred. Issue #37 chose
+  a registry with per-preset validation instead, keeping the key a free
+  slug (Issue #30 contract); revisit only if a closed set becomes useful.
+- `site-builder` integration and the manual editing UI/server action
+  (mounting `Experience3DView` in the preview, editing `config` through
+  the preset's validation) — next Issues.
+- Pausing/deferring the render loop while the hero is off-screen (lazy
+  mount by visibility) — not done in Issue #37.
 
 ## Depends on
 
