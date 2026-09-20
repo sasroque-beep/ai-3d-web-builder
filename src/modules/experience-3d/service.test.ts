@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SitePageSectionRecord } from "@/modules/design/types";
+import { createPresetRegistry } from "@/modules/experience-3d/presets/registry";
 import {
   checkExperience3DEligibility,
   createExperience3DService,
@@ -53,7 +54,7 @@ function validInput(
   return {
     sectionId: "section-1",
     presetKey: "hero-showcase",
-    config: { intensity: "standard" },
+    config: { motionIntensity: 0.5 },
     fallback2d: {
       imageUrl: "https://cdn.example.com/fallback.png",
       imageAlt: "Ilustração do produto em destaque",
@@ -138,5 +139,83 @@ describe("experience-3d service", () => {
     const config = await service.getSceneConfig("section-1");
 
     expect(config).toBeUndefined();
+  });
+});
+
+describe("experience-3d service — per-preset config validation (Issue #37)", () => {
+  it("rejects an invalid config for a registered preset, without persisting", async () => {
+    const repository = createFakeRepository();
+    const service = createExperience3DService(repository);
+
+    const result = await service.upsertSceneConfig(
+      validInput({ config: { shape: "cube", unknown: true } }),
+      SECTION,
+    );
+
+    expect(result.success).toBe(false);
+    if (!result.success && !("ineligible" in result)) {
+      expect(result.errors.config).toContain("shape");
+    }
+    expect(await service.getSceneConfig("section-1")).toBeUndefined();
+  });
+
+  it("persists the normalized config (defaults applied) for a registered preset", async () => {
+    const service = createExperience3DService(createFakeRepository());
+
+    const result = await service.upsertSceneConfig(
+      validInput({ config: { shape: "torus-knot", accentColor: "#FF00AA" } }),
+      SECTION,
+    );
+
+    if (!result.success) throw new Error("expected the upsert to succeed");
+    expect(result.data.config).toEqual({
+      shape: "torus-knot",
+      primaryColor: "#6d5efc",
+      accentColor: "#ff00aa",
+      motionIntensity: 0.5,
+      particleCount: 40,
+    });
+  });
+
+  it("still accepts an unregistered preset with any plain config (Issue #30 compat)", async () => {
+    const service = createExperience3DService(createFakeRepository());
+
+    const result = await service.upsertSceneConfig(
+      validInput({
+        presetKey: "scroll-parallax",
+        config: { anything: ["goes", 1, true] },
+      }),
+      SECTION,
+    );
+
+    if (!result.success) throw new Error("expected the upsert to succeed");
+    expect(result.data.config).toEqual({ anything: ["goes", 1, true] });
+  });
+
+  it("uses the injected registry, so a new preset needs no change to validation", async () => {
+    const registry = createPresetRegistry([
+      {
+        key: "custom-preset",
+        label: "Custom",
+        parseConfig: (config) =>
+          typeof config === "object" && config !== null && "ok" in config
+            ? { success: true, config: { ok: true } }
+            : { success: false, error: "faltou o campo ok" },
+      },
+    ]);
+    const service = createExperience3DService(createFakeRepository(), registry);
+
+    const rejected = await service.upsertSceneConfig(
+      validInput({ presetKey: "custom-preset", config: {} }),
+      SECTION,
+    );
+    const accepted = await service.upsertSceneConfig(
+      validInput({ presetKey: "custom-preset", config: { ok: 1 } }),
+      SECTION,
+    );
+
+    expect(rejected.success).toBe(false);
+    if (!accepted.success) throw new Error("expected the upsert to succeed");
+    expect(accepted.data.config).toEqual({ ok: true });
   });
 });

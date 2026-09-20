@@ -1,4 +1,6 @@
 import type { SitePageSectionRecord } from "@/modules/design/types";
+import type { PresetRegistry } from "@/modules/experience-3d/presets/registry";
+import { presetRegistry } from "@/modules/experience-3d/presets/registry";
 import type {
   Experience3DEligibility,
   Experience3DSceneConfig,
@@ -57,6 +59,7 @@ function toExperience3DSceneConfig(
 
 export function createExperience3DService(
   repository: Experience3DSceneConfigRepository = experience3DSceneConfigRepository,
+  presets: PresetRegistry = presetRegistry,
 ) {
   return {
     async upsertSceneConfig(
@@ -73,10 +76,25 @@ export function createExperience3DService(
         return { success: false, errors: validation.errors };
       }
 
+      // Registered presets validate (and normalize, filling defaults) their
+      // own config; an unregistered key stays accepted, exactly as the
+      // Issue #30 contract always allowed — the runtime falls back to 2D.
+      const presetOutcome = presets.parseConfig(
+        validation.data.presetKey,
+        validation.data.config,
+      );
+      if (presetOutcome.kind === "invalid") {
+        return { success: false, errors: { config: presetOutcome.error } };
+      }
+      const config =
+        presetOutcome.kind === "valid"
+          ? presetOutcome.config
+          : validation.data.config;
+
       const saved = await repository.upsert({
         sectionId: validation.data.sectionId,
         presetKey: validation.data.presetKey,
-        config: validation.data.config,
+        config,
         fallback2dImageUrl: validation.data.fallback2d.imageUrl,
         fallback2dImageAlt: validation.data.fallback2d.imageAlt,
         generatedBy: validation.data.generatedBy,
