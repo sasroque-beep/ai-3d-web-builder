@@ -32,6 +32,7 @@ pnpm check               # Biome lint + format + assist (CI gate)
 pnpm check:fix           # Biome autofix
 pnpm test                # Vitest run
 pnpm test:coverage       # Vitest + v8 coverage
+pnpm test:e2e            # Playwright (Chromium) against the production build — run pnpm build first
 ```
 
 ## Structure
