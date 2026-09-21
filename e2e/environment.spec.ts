@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./support/fixtures";
 
 /**
  * Probe: the rest of the suite assumes the browser can create a WebGL2

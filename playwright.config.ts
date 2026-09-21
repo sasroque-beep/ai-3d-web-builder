@@ -70,9 +70,11 @@ if (!existsSync(".next/BUILD_ID")) {
 
 export default defineConfig({
   testDir: "./e2e",
-  // WebGL through software rendering is heavy: keep CI deterministic.
+  // WebGL through software (SwiftShader) rendering is CPU-heavy: parallel
+  // workers starve each other and turn into timeouts (measured: 10% failures
+  // with 2 workers on a 4-core machine). One worker, everywhere, on purpose.
   fullyParallel: false,
-  workers: isCI ? 1 : undefined,
+  workers: 1,
   // No retries: a retry would hide exactly the flakiness this suite must expose.
   retries: 0,
   forbidOnly: isCI,

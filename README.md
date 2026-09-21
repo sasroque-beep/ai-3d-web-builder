@@ -347,9 +347,15 @@ Instala as dependências e os Git hooks (Lefthook).
 | `pnpm check:fix` | Biome: aplica correções seguras |
 | `pnpm test` | Testes unitários (Vitest) |
 | `pnpm test:coverage` | Testes com cobertura |
+| `pnpm test:e2e` | Testes E2E em navegador real (Playwright, Chromium; exige `pnpm build` antes) |
 
 Antes de abrir um PR:
-`pnpm check && pnpm typecheck && pnpm test && pnpm build` (a CI roda o mesmo).
+`pnpm check && pnpm typecheck && pnpm test && pnpm build` (o job `verify` da CI
+roda o mesmo).
+
+Os testes E2E rodam num job separado da CI (`e2e`). Para rodá-los localmente:
+`pnpm exec playwright install chromium` (uma vez) e `pnpm test:e2e` depois do
+`pnpm build`. Detalhes em [`docs/QUALITY_ASSURANCE.md`](./docs/QUALITY_ASSURANCE.md) §9.
 
 ### Stack da fundação
 

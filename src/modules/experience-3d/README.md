@@ -176,7 +176,8 @@ and one `dynamic()` entry in `presets/renderers.ts`. No change to
   disabled the 2D fallback shows; the server HTML has the `<img>` + alt,
   no `<canvas>` and no 3D chunk. **Not** checked in a real browser:
   animation, the mode/shape override buttons and `REDUCED_3D` visually —
-  that is what the future E2E Issue is for.
+  that gap was closed afterwards by the Playwright suite (Issue #41,
+  see the note under "Still open").
 
 ### Bundle impact (measured, Issue #37)
 
@@ -288,12 +289,14 @@ conversation history in each new Issue.
 
 - Concrete shape of the 3D asset storage/CDN (deferred above, not
   resolved).
-- Playwright/E2E adoption for validating real 3D scenes (Vitest +
-  jsdom has no WebGL context; only composition, mode logic and import
-  boundaries are unit-tested today, see `SmokeTestScene.test.tsx` and
-  `presets/hero-showcase/HeroShowcaseScene.test.tsx`). The actual WebGL
-  rendering of `hero-showcase` is validated manually on the dev route; a
-  dedicated Issue for real visual/E2E tests is to be registered.
+- Real-browser validation is now automated with Playwright (Issue #41):
+  `e2e/experience-3d/` runs against the production build in Chromium (the
+  only mandatory browser; Firefox/WebKit are declared in
+  `playwright.config.ts` but not validated). See
+  `docs/QUALITY_ASSURANCE.md` §9 for the tool justification, what is
+  covered and how to run it. No pixel/screenshot regression by design.
+  Known runtime bug found by that suite: #42 (discarding the scene fires
+  `webglcontextlost` and latches `FALLBACK_2D`).
 - Whether/how `experience3dOpportunities`
   (`../site-planning/types.ts`) gets structured beyond free text.
 - Closing `presetKey` into a fixed enum — still deferred. Issue #37 chose
