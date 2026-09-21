@@ -217,8 +217,9 @@ que o Vitest + jsdom não consegue cobrir (sem WebGL, sem layout, sem rede real)
 4. **Custo.** Uma devDependency (`playwright-core` ≈ 13 MB, fora do bundle e da
    produção); navegadores fora do repositório (`%LOCALAPPDATA%\ms-playwright`,
    `~/.cache/ms-playwright`; da ordem de centenas de MB na primeira instalação
-   local, em cache na CI); um job de CI em paralelo (~1 min com cache frio no
-   spike, medido).
+   local, em cache na CI); um job de CI em paralelo (~1 min 50 s no total
+   com cache frio, medido na CI: 19 s instalando o Chromium, 37 s de build e 34 s
+   de testes).
 5. **Necessidade e alternativas.** *Vitest Browser Mode* roda componentes em
    browser real, mas não cobre servidor de produção, SSR, HTML sem JS nem rede —
    e usaria Playwright como provider mesmo assim. *Cypress*: runner próprio, mais
