@@ -46,3 +46,8 @@ Thumbs.db
 
 # Local SQLite database (src/server/db)
 .data/
+
+# Playwright (E2E) artifacts
+playwright-report/
+test-results/
+blob-report/
