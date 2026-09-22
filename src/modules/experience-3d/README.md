@@ -295,8 +295,12 @@ conversation history in each new Issue.
   `playwright.config.ts` but not validated). See
   `docs/QUALITY_ASSURANCE.md` §9 for the tool justification, what is
   covered and how to run it. No pixel/screenshot regression by design.
-  Known runtime bug found by that suite: #42 (discarding the scene fires
-  `webglcontextlost` and latches `FALLBACK_2D`).
+  That suite found (and Issue #42 fixed) a runtime bug: R3F force-loses the
+  WebGL context ~500 ms after a Canvas unmounts, and the scene took that for
+  a real failure and latched `FALLBACK_2D`. The scene now listens for
+  `webglcontextlost` only while mounted (`HeroShowcaseScene`), so a new
+  preset's scene must do the same: **never register a context-loss listener
+  that outlives the scene**.
 - Whether/how `experience3dOpportunities`
   (`../site-planning/types.ts`) gets structured beyond free text.
 - Closing `presetKey` into a fixed enum — still deferred. Issue #37 chose

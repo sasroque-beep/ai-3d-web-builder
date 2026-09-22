@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { type ReactNode, StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -19,31 +19,41 @@ const canvas = vi.hoisted(() => ({
   domElement: undefined as unknown as HTMLCanvasElement,
 }));
 
-vi.mock("@react-three/fiber", () => ({
-  Canvas: ({
-    children,
-    frameloop,
-    dpr,
-    onCreated,
-  }: {
-    children: ReactNode;
-    frameloop: string;
-    dpr: unknown;
-    onCreated: (state: { gl: { domElement: HTMLCanvasElement } }) => void;
-  }) => {
-    onCreated({ gl: { domElement: canvas.domElement } });
-    return (
-      <div
-        data-testid="r3f-canvas"
-        data-frameloop={frameloop}
-        data-dpr={JSON.stringify(dpr)}
-      >
-        {children}
-      </div>
-    );
-  },
-  useFrame: () => {},
-}));
+vi.mock("@react-three/fiber", async () => {
+  const { useEffect } = await import("react");
+
+  return {
+    Canvas: ({
+      children,
+      frameloop,
+      dpr,
+      onCreated,
+    }: {
+      children: ReactNode;
+      frameloop: string;
+      dpr: unknown;
+      onCreated: (state: { gl: { domElement: HTMLCanvasElement } }) => void;
+    }) => {
+      // Like the real R3F, `onCreated` fires after mount (once the renderer
+      // exists), never during render — so the scene is free to set state
+      // from it. It also re-fires on every (Strict Mode) re-mount.
+      useEffect(() => {
+        onCreated({ gl: { domElement: canvas.domElement } });
+      }, []);
+
+      return (
+        <div
+          data-testid="r3f-canvas"
+          data-frameloop={frameloop}
+          data-dpr={JSON.stringify(dpr)}
+        >
+          {children}
+        </div>
+      );
+    },
+    useFrame: () => {},
+  };
+});
 
 vi.mock("@react-three/drei", () => ({
   Float: ({ children }: { children: ReactNode }) => (
@@ -168,6 +178,73 @@ describe("hero-showcase/HeroShowcaseScene", () => {
 
     expect(onRuntimeFailure).toHaveBeenCalledTimes(1);
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  describe("webglcontextlost after the scene is discarded (Issue #42)", () => {
+    // R3F calls `gl.forceContextLoss()` ~500 ms *after* unmounting a Canvas,
+    // which fires `webglcontextlost` on a canvas that is already gone. That
+    // is the application discarding the scene, not a WebGL failure.
+    it("does not report a runtime failure when it is unmounted on purpose", () => {
+      const onRuntimeFailure = vi.fn();
+      const { unmount } = render(
+        <HeroShowcaseScene
+          config={config()}
+          mode="FULL_3D"
+          onReady={vi.fn()}
+          onRuntimeFailure={onRuntimeFailure}
+        />,
+      );
+
+      unmount();
+      canvas.domElement.dispatchEvent(
+        new Event("webglcontextlost", { cancelable: true }),
+      );
+
+      expect(onRuntimeFailure).not.toHaveBeenCalled();
+    });
+
+    it("still reports a real loss exactly once under React Strict Mode", () => {
+      const onRuntimeFailure = vi.fn();
+      render(
+        <StrictMode>
+          <HeroShowcaseScene
+            config={config()}
+            mode="FULL_3D"
+            onReady={vi.fn()}
+            onRuntimeFailure={onRuntimeFailure}
+          />
+        </StrictMode>,
+      );
+
+      canvas.domElement.dispatchEvent(
+        new Event("webglcontextlost", { cancelable: true }),
+      );
+
+      // Strict Mode mounts, unmounts and re-mounts: the listener must be
+      // neither lost for good (0 calls) nor leaked by the first mount (2).
+      expect(onRuntimeFailure).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not leak listeners when the scene is mounted and discarded repeatedly", () => {
+      const onRuntimeFailure = vi.fn();
+
+      for (let i = 0; i < 3; i++) {
+        const { unmount } = render(
+          <HeroShowcaseScene
+            config={config()}
+            mode="FULL_3D"
+            onReady={vi.fn()}
+            onRuntimeFailure={onRuntimeFailure}
+          />,
+        );
+        unmount();
+      }
+      canvas.domElement.dispatchEvent(
+        new Event("webglcontextlost", { cancelable: true }),
+      );
+
+      expect(onRuntimeFailure).not.toHaveBeenCalled();
+    });
   });
 
   it.each(["icosahedron", "torus-knot", "octahedron"] as const)(

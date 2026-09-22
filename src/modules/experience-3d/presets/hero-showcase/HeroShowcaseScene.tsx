@@ -2,7 +2,7 @@
 
 import { Float } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type * as THREE from "three";
 
 import type {
@@ -135,6 +135,29 @@ export function HeroShowcaseScene({
   const animated = full && config.motionIntensity > 0;
   const spin = animated ? config.motionIntensity * 0.9 : 0;
 
+  const [glCanvas, setGlCanvas] = useState<HTMLCanvasElement | null>(null);
+
+  // A lost context is a runtime failure only while this scene is alive. It is
+  // listened for in an effect — not registered once from `onCreated` — so the
+  // listener is removed when the scene unmounts: R3F force-loses the context
+  // ~500 ms after unmounting a Canvas, and by then that is the application
+  // discarding the scene (a preset/override change), not WebGL failing.
+  // Keeping the listener would latch the failure and lock the experience on
+  // FALLBACK_2D for good (Issue #42).
+  useEffect(() => {
+    if (!glCanvas) return;
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      onRuntimeFailure();
+    };
+
+    glCanvas.addEventListener("webglcontextlost", handleContextLost);
+    return () => {
+      glCanvas.removeEventListener("webglcontextlost", handleContextLost);
+    };
+  }, [glCanvas, onRuntimeFailure]);
+
   return (
     <Canvas
       camera={{ position: [0, 0, 6], fov: 45 }}
@@ -142,10 +165,7 @@ export function HeroShowcaseScene({
       // Nothing moves when motion is off, so don't burn frames re-drawing it.
       frameloop={animated ? "always" : "demand"}
       onCreated={({ gl }) => {
-        gl.domElement.addEventListener("webglcontextlost", (event) => {
-          event.preventDefault();
-          onRuntimeFailure();
-        });
+        setGlCanvas(gl.domElement);
         onReady();
       }}
     >
