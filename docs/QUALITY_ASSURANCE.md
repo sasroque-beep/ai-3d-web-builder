@@ -284,6 +284,9 @@ em `src/`. Se não houver build, a configuração falha com uma mensagem clara.
 - Os testes usam a rota de validação `/dev/experience-3d-hero-showcase`, que hoje
   vai no build de produção (precedente da Issue #24). Se ela for protegida, a
   suíte precisará de outra fixture.
-- Um bug real do runtime, encontrado por esta suíte, está registrado na
-  Issue #42 e coberto por um `test.fixme` em `runtime-modes.spec.ts`; deve ser
-  reativado quando a #42 for corrigida.
+- Um bug real do runtime foi encontrado por esta suíte e corrigido na Issue #42:
+  descartar a cena (ex.: override `FALLBACK_2D`) fazia o R3F disparar
+  `webglcontextlost` ~500 ms depois, e o runtime tratava isso como falha real,
+  travando o modo Automático em `FALLBACK_2D`. Os testes de regressão em
+  `runtime-modes.spec.ts` aguardam além desse atraso e cobrem as duas ordens de
+  volta ao Automático (esperando e imediatamente).

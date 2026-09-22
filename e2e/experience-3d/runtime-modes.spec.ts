@@ -10,6 +10,13 @@ import {
 /** Long enough to tell a running render loop from an idle one. */
 const OBSERVATION_MS = 1_500;
 
+/**
+ * R3F disposes an unmounted Canvas (including `forceContextLoss()`) 500 ms
+ * later. This outlasts it, so anything that disposal would trigger has
+ * happened by the time we look.
+ */
+const R3F_DISPOSE_SETTLE_MS = 800;
+
 test.describe("FULL_3D", () => {
   test("upgrades the server-rendered 2D fallback to a live 3D scene", async ({
     page,
@@ -123,22 +130,59 @@ test.describe("mode override controls", () => {
     await expect(auto).toHaveAttribute("aria-pressed", "false");
   });
 
-  // Known product bug, found by this suite and tracked in #42 (not fixed in
-  // the Issue that introduced the E2E suite). Discarding the scene makes R3F
-  // fire `webglcontextlost` on the detached canvas, which the runtime takes
-  // for a real failure and latches, so "Automático" can never recover.
-  // Re-enable (drop `.fixme`) when #42 is fixed.
-  test.fixme("Automático recovers after the scene was discarded (#42)", async ({
-    page,
-  }) => {
-    const { wrapper, modeButton } = await gotoHero(page);
-    await expectMode(wrapper, "FULL_3D");
+  // Regression for #42. Discarding the scene made R3F fire `webglcontextlost`
+  // on the already-detached canvas, which the runtime took for a real failure
+  // and latched — so "Automático" could never recover. R3F fires that event
+  // ~500 ms *after* unmounting, hence the waits: an assertion made sooner
+  // would pass before the (old) bug had even happened.
+  test.describe("Automático after the scene was discarded (#42)", () => {
+    const auto = "Automático (capabilities reais)";
 
-    await modeButton("FALLBACK_2D").click();
-    await expectMode(wrapper, "FALLBACK_2D");
+    test("recovers once R3F has finished disposing the old scene", async ({
+      page,
+    }) => {
+      const { wrapper, canvas, modeButton } = await gotoHero(page);
+      await expectMode(wrapper, "FULL_3D");
 
-    await modeButton("Automático (capabilities reais)").click();
-    await expectMode(wrapper, "FULL_3D");
+      await modeButton("FALLBACK_2D").click();
+      await expectMode(wrapper, "FALLBACK_2D");
+      await page.waitForTimeout(R3F_DISPOSE_SETTLE_MS);
+
+      await modeButton(auto).click();
+      await expectMode(wrapper, "FULL_3D");
+      await expect(canvas).toBeVisible();
+    });
+
+    test("recovers when switching back before the old scene is disposed", async ({
+      page,
+    }) => {
+      const { wrapper, canvas, modeButton } = await gotoHero(page);
+      await expectMode(wrapper, "FULL_3D");
+
+      await modeButton("FALLBACK_2D").click();
+      await modeButton(auto).click();
+      await expectMode(wrapper, "FULL_3D");
+
+      // The old scene's deferred context loss lands during this window; it
+      // must not take the new scene down with it.
+      await page.waitForTimeout(R3F_DISPOSE_SETTLE_MS);
+      await expectMode(wrapper, "FULL_3D");
+      await expect(canvas).toBeVisible();
+    });
+
+    test("survives repeated discard/restore cycles", async ({ page }) => {
+      const { wrapper, modeButton } = await gotoHero(page);
+      await expectMode(wrapper, "FULL_3D");
+
+      for (let cycle = 0; cycle < 3; cycle++) {
+        await modeButton("FALLBACK_2D").click();
+        await expectMode(wrapper, "FALLBACK_2D");
+        await modeButton(auto).click();
+        await expectMode(wrapper, "FULL_3D");
+        await page.waitForTimeout(R3F_DISPOSE_SETTLE_MS);
+        await expectMode(wrapper, "FULL_3D");
+      }
+    });
   });
 
   test("changing the shape keeps the 3D scene running without errors", async ({
