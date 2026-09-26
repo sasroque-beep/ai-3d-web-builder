@@ -4,6 +4,7 @@ import type {
   SitePageSectionRecord,
   SiteThemeRecord,
 } from "@/modules/design/types";
+import type { Experience3DSceneConfig } from "@/modules/experience-3d/types";
 import type {
   PagePreview,
   PreviewEligibility,
@@ -36,6 +37,7 @@ export function checkPreviewEligibility(
 function toSectionPreview(
   section: SitePageSectionRecord,
   copy: SectionCopyRecord | undefined,
+  experience3d: Experience3DSceneConfig | undefined,
 ): SectionPreview {
   return {
     id: section.id,
@@ -57,6 +59,7 @@ function toSectionPreview(
           notes: copy.notes,
         }
       : null,
+    experience3d: experience3d ?? null,
   };
 }
 
@@ -78,6 +81,13 @@ export interface BuildSitePreviewInput {
   pages: SitePageRecord[];
   sectionsByPage: Map<string, SitePageSectionRecord[]>;
   copyBySection: Map<string, SectionCopyRecord | undefined>;
+  /**
+   * Optional (defaults to empty): most callers have a 3D experience for
+   * only a handful of sections, if any at all (Issue #45). Keeping it
+   * optional avoids forcing every existing/future caller that doesn't care
+   * about 3D to pass an empty map explicitly.
+   */
+  experienceBySection?: Map<string, Experience3DSceneConfig | undefined>;
   theme: SiteThemeRecord | undefined;
 }
 
@@ -89,6 +99,7 @@ export interface BuildSitePreviewInput {
  * listSections already sort by position, so this doesn't re-sort.
  */
 export function buildSitePreview(input: BuildSitePreviewInput): SitePreview {
+  const experienceBySection = input.experienceBySection ?? new Map();
   const pages: PagePreview[] = input.pages.map((page) => {
     const sections = input.sectionsByPage.get(page.id) ?? [];
     return {
@@ -99,7 +110,11 @@ export function buildSitePreview(input: BuildSitePreviewInput): SitePreview {
       journeyStage: page.journeyStage,
       position: page.position,
       sections: sections.map((section) =>
-        toSectionPreview(section, input.copyBySection.get(section.id)),
+        toSectionPreview(
+          section,
+          input.copyBySection.get(section.id),
+          experienceBySection.get(section.id),
+        ),
       ),
     };
   });

@@ -7,7 +7,25 @@ vi.mock("@/modules/copy/actions", () => ({
   upsertSectionCopyAction: vi.fn(),
 }));
 
+// Renders the real 3D runtime (R3F/Three.js) — irrelevant here, this suite
+// only asserts *whether* the preview mounts it for a section, never how it
+// renders. A minimal stand-in keeps this test independent of WebGL/jsdom
+// limitations (same reasoning as the mocks in `Experience3DView.test.tsx`).
+vi.mock("@/modules/experience-3d/Experience3DView", () => ({
+  Experience3DView: ({
+    sceneConfig,
+  }: {
+    sceneConfig: { presetKey: string };
+  }) => (
+    <div
+      data-testid="experience-3d-view"
+      data-preset-key={sceneConfig.presetKey}
+    />
+  ),
+}));
+
 import { SitePreviewViewer } from "@/app/leads/[id]/site-builder/SitePreviewViewer";
+import type { Experience3DSceneConfig } from "@/modules/experience-3d/types";
 import type { SitePreview } from "@/modules/site-builder/types";
 
 function basePreview(overrides: Partial<SitePreview> = {}): SitePreview {
@@ -42,6 +60,7 @@ function basePreview(overrides: Partial<SitePreview> = {}): SitePreview {
               socialProofText: null,
               notes: null,
             },
+            experience3d: null,
           },
         ],
       },
@@ -64,10 +83,27 @@ function basePreview(overrides: Partial<SitePreview> = {}): SitePreview {
             socialProofText: null,
             hasContent: false,
             copy: null,
+            experience3d: null,
           },
         ],
       },
     ],
+    ...overrides,
+  };
+}
+
+function experience3d(
+  overrides: Partial<Experience3DSceneConfig> = {},
+): Experience3DSceneConfig {
+  return {
+    sectionId: "section-1",
+    presetKey: "hero-showcase",
+    config: { shape: "icosahedron" },
+    fallback2d: {
+      imageUrl: "/fallback.svg",
+      imageAlt: "Forma geométrica abstrata",
+    },
+    generatedBy: "manual",
     ...overrides,
   };
 }
@@ -164,6 +200,42 @@ describe("SitePreviewViewer", () => {
       screen.getByRole("heading", { name: "Pão fresco todos os dias" }),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("Título/headline")).not.toBeInTheDocument();
+  });
+
+  it("does not mount a 3D experience for a section that has none configured", () => {
+    render(<SitePreviewViewer preview={basePreview()} />);
+
+    expect(screen.queryByTestId("experience-3d-view")).not.toBeInTheDocument();
+  });
+
+  it("mounts the section's 3D experience when one is configured", () => {
+    const preview = basePreview();
+    const [firstPage, ...restPages] = preview.pages;
+    if (!firstPage) throw new Error("expected a first page");
+    const [firstSection, ...restSections] = firstPage.sections;
+    if (!firstSection) throw new Error("expected a first section");
+
+    render(
+      <SitePreviewViewer
+        preview={{
+          ...preview,
+          pages: [
+            {
+              ...firstPage,
+              sections: [
+                { ...firstSection, experience3d: experience3d() },
+                ...restSections,
+              ],
+            },
+            ...restPages,
+          ],
+        }}
+      />,
+    );
+
+    const scene = screen.getByTestId("experience-3d-view");
+    expect(scene).toBeInTheDocument();
+    expect(scene).toHaveAttribute("data-preset-key", "hero-showcase");
   });
 
   it("exits edit mode when switching to a different page", async () => {
