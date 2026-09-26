@@ -8,6 +8,8 @@ import type { SectionCopyRecord } from "@/modules/copy/types";
 import { crmService } from "@/modules/crm/service";
 import { designService } from "@/modules/design/service";
 import type { SitePageSectionRecord } from "@/modules/design/types";
+import { experience3DService } from "@/modules/experience-3d/service";
+import type { Experience3DSceneConfig } from "@/modules/experience-3d/types";
 import {
   buildSitePreview,
   checkPreviewEligibility,
@@ -105,6 +107,21 @@ export default async function SiteBuilderPage({
     ),
   );
 
+  const experienceBySection = new Map<
+    string,
+    Experience3DSceneConfig | undefined
+  >(
+    await Promise.all(
+      allSections.map(
+        async (section) =>
+          [
+            section.id,
+            await experience3DService.getSceneConfig(section.id),
+          ] as const,
+      ),
+    ),
+  );
+
   const theme = await designService.getTheme(id);
 
   const preview = buildSitePreview({
@@ -112,6 +129,7 @@ export default async function SiteBuilderPage({
     pages,
     sectionsByPage,
     copyBySection,
+    experienceBySection,
     theme,
   });
 

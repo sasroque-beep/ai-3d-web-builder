@@ -3,6 +3,7 @@ import type {
   JourneyStageKey,
   SpacingDensityKey,
 } from "@/modules/design/types";
+import type { Experience3DSceneConfig } from "@/modules/experience-3d/types";
 
 export interface SectionPreviewCopy {
   headline: string | null;
@@ -31,6 +32,13 @@ export interface SectionPreview {
    * text as if it were authored copy.
    */
   copy: SectionPreviewCopy | null;
+  /**
+   * The section's persisted 3D experience config (Issue #33), or `null` for
+   * a section that has none configured. Read-only here — only the public
+   * `experience-3d` contract, never renderer internals; editing it from the
+   * preview is a future Issue (mirrors `copy` above).
+   */
+  experience3d: Experience3DSceneConfig | null;
 }
 
 export interface PagePreview {

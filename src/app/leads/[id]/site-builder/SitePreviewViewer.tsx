@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { SectionEditForm } from "@/app/leads/[id]/site-builder/SectionEditForm";
+import { Experience3DView } from "@/modules/experience-3d/Experience3DView";
 import type {
   PagePreview,
   SitePreview,
@@ -125,6 +126,12 @@ export function SitePreviewViewer({ preview }: SitePreviewViewerProps) {
                       Editar
                     </button>
                   </div>
+                  {section.experience3d ? (
+                    <Experience3DView
+                      sceneConfig={section.experience3d}
+                      className="aspect-video w-full rounded-md border border-white/10"
+                    />
+                  ) : null}
                   {section.subheading ? (
                     <p className="text-sm text-foreground/70">
                       {section.subheading}

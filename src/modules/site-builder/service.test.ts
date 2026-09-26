@@ -6,6 +6,7 @@ import type {
   SitePageSectionRecord,
   SiteThemeRecord,
 } from "@/modules/design/types";
+import type { Experience3DSceneConfig } from "@/modules/experience-3d/types";
 import {
   buildSitePreview,
   checkPreviewEligibility,
@@ -82,6 +83,22 @@ function theme(overrides: Partial<SiteThemeRecord> = {}): SiteThemeRecord {
     generatedBy: "manual",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
+function experience3d(
+  overrides: Partial<Experience3DSceneConfig> = {},
+): Experience3DSceneConfig {
+  return {
+    sectionId: "section-1",
+    presetKey: "hero-showcase",
+    config: { shape: "icosahedron" },
+    fallback2d: {
+      imageUrl: "/fallback.svg",
+      imageAlt: "Forma geométrica abstrata",
+    },
+    generatedBy: "manual",
     ...overrides,
   };
 }
@@ -224,5 +241,30 @@ describe("buildSitePreview", () => {
     });
 
     expect(preview.pages[0]?.sections).toEqual([]);
+  });
+
+  it("includes the section's persisted 3D experience config when it exists", () => {
+    const preview = buildSitePreview({
+      company: { id: "company-1", name: "Padaria do Bairro" },
+      pages: [page()],
+      sectionsByPage: new Map([["page-1", [section()]]]),
+      copyBySection: new Map(),
+      experienceBySection: new Map([["section-1", experience3d()]]),
+      theme: undefined,
+    });
+
+    expect(preview.pages[0]?.sections[0]?.experience3d).toEqual(experience3d());
+  });
+
+  it("returns a null 3D experience for a section that has none configured", () => {
+    const preview = buildSitePreview({
+      company: { id: "company-1", name: "Padaria do Bairro" },
+      pages: [page()],
+      sectionsByPage: new Map([["page-1", [section()]]]),
+      copyBySection: new Map(),
+      theme: undefined,
+    });
+
+    expect(preview.pages[0]?.sections[0]?.experience3d).toBeNull();
   });
 });

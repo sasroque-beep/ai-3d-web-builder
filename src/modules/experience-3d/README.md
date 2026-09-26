@@ -10,7 +10,9 @@
 > Persistence (table, repository, CRUD in `service.ts`) is implemented
 > (Issue #33). The first real preset (`hero-showcase`, procedural) and
 > the runtime that renders it with a working 2D fallback are implemented
-> (Issue #37). No editing UI and no integration with `site-builder` yet.
+> (Issue #37). Real-browser E2E coverage (Issue #41) found and Issue #42
+> fixed a runtime bug. The site preview now renders a section's 3D
+> experience read-only (Issue #45). No editing UI yet.
 
 ## Responsibility
 
@@ -217,6 +219,28 @@ real cost of any 3D preset. Only `FALLBACK_2D` (no WebGL, failure, invalid
 config) avoids it entirely — `REDUCED_3D` still mounts the scene, so it
 saves GPU/CPU work, not download size.
 
+## Implemented (Issue #45)
+
+Read-only integration with `site-builder`'s preview — the first real
+consumer outside this module and its `/dev` demo route.
+
+- `site-builder`'s `SectionPreview` (its own public type, not this
+  module's) now carries the section's `Experience3DSceneConfig | null`,
+  fetched via `experience3DService.getSceneConfig` exactly like it
+  already fetches section copy. `buildSitePreview` stays a pure
+  composition function — no new persistence, no new eligibility rule.
+- `SitePreviewViewer` mounts `Experience3DView` for a section that has a
+  config, right under its heading — an additional visual layer, never in
+  place of the section's content/CTA (Issue #26's progressive-enhancement
+  decision applies to every consumer, not just the `/dev` demo).
+- `site-builder` only imports `Experience3DView` (the public component)
+  and this module's public types — never R3F/Drei/Three.js. Already
+  enforced by this module's own `isolation.test.ts`, which scans all of
+  `src/` (not just this module) for that boundary.
+- No editing UI/server action for the 3D config yet — a future Issue,
+  mirroring how `site-builder`'s inline content editing (Issue #22)
+  followed its own read-only preview (Issue #20).
+
 ## Confirmed architectural decisions (Issue #26)
 
 These decisions are binding for every future Issue in this module
@@ -306,9 +330,9 @@ conversation history in each new Issue.
 - Closing `presetKey` into a fixed enum — still deferred. Issue #37 chose
   a registry with per-preset validation instead, keeping the key a free
   slug (Issue #30 contract); revisit only if a closed set becomes useful.
-- `site-builder` integration and the manual editing UI/server action
-  (mounting `Experience3DView` in the preview, editing `config` through
-  the preset's validation) — next Issues.
+- The manual editing UI/server action (editing `config` through the
+  preset's validation, from the `site-builder` preview) — next Issue.
+  `site-builder` preview integration itself is done (Issue #45, above).
 - Pausing/deferring the render loop while the hero is off-screen (lazy
   mount by visibility) — not done in Issue #37.
 

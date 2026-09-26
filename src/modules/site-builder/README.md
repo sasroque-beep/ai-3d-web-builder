@@ -1,9 +1,10 @@
 # Site Builder
 
 > Status: **in progress** — site preview implemented (Issue #20), with
-> inline editing of section content from the preview (Issue #22).
-> Export/render pipeline and page/section/component generation are
-> still planned.
+> inline editing of section content from the preview (Issue #22) and,
+> read-only, a section's 3D experience when one is configured (Issue
+> #45). Export/render pipeline and page/section/component generation
+> are still planned.
 
 ## Responsibility
 
@@ -46,6 +47,24 @@ already stored by `design` and `copy` and composes it for rendering.
   pages exits any open edit. `upsertSectionCopyAction`
   (`src/modules/copy/actions.ts`) now revalidates both `/copy` and
   `/site-builder` so the two screens never fall out of sync.
+
+## Implemented (Issue #45)
+
+- `SectionPreview.experience3d` now carries the section's persisted
+  `Experience3DSceneConfig` (`../experience-3d`, Issue #33), or `null` —
+  fetched in `/leads/[id]/site-builder/page.tsx` via
+  `experience3DService.getSceneConfig`, the same way section copy is
+  fetched. `buildSitePreview` composes it; no new persistence, no new
+  eligibility rule.
+- `SitePreviewViewer` mounts `Experience3DView` (`../experience-3d`)
+  under a section's heading when it has a configured 3D experience — a
+  visual layer only, never replacing the section's content/CTA. A
+  section without one renders exactly as before.
+- Only `Experience3DView` and `experience-3d`'s public types are
+  imported — never R3F/Drei/Three.js, per that module's isolation
+  decision (Issue #26), enforced by its own `isolation.test.ts`.
+- No editing UI for the 3D config yet — future Issue, mirroring how
+  Issue #22 followed Issue #20 for section content.
 
 ## Belongs here
 
