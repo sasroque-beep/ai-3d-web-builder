@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { SceneConfigEditForm } from "@/app/leads/[id]/site-builder/SceneConfigEditForm";
 import { SectionEditForm } from "@/app/leads/[id]/site-builder/SectionEditForm";
 import { Experience3DView } from "@/modules/experience-3d/Experience3DView";
 import type {
@@ -9,6 +10,14 @@ import type {
   SitePreview,
   SitePreviewTheme,
 } from "@/modules/site-builder/types";
+
+/**
+ * A section can be edited in at most one way at a time — content and the
+ * 3D experience never open together (Issue #48's UX decision), so this is
+ * a single piece of state naming which form (if any) is open, not two
+ * independent booleans that could disagree.
+ */
+type EditingTarget = { sectionId: string; kind: "content" | "experience3d" };
 
 const SPACING_GAP_CLASSES: Record<
   NonNullable<SitePreviewTheme["spacingDensity"]>,
@@ -41,7 +50,7 @@ export function SitePreviewViewer({ preview }: SitePreviewViewerProps) {
   const [selectedPageId, setSelectedPageId] = useState<string>(
     preview.pages[0]?.id ?? "",
   );
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<EditingTarget | null>(null);
 
   const selectedPage: PagePreview | undefined = preview.pages.find(
     (page) => page.id === selectedPageId,
@@ -49,7 +58,7 @@ export function SitePreviewViewer({ preview }: SitePreviewViewerProps) {
 
   function selectPage(pageId: string) {
     setSelectedPageId(pageId);
-    setEditingSectionId(null);
+    setEditing(null);
   }
 
   const gapClass = preview.theme?.spacingDensity
@@ -93,16 +102,31 @@ export function SitePreviewViewer({ preview }: SitePreviewViewerProps) {
               Nenhuma seção cadastrada ainda para esta página.
             </p>
           ) : (
-            selectedPage.sections.map((section) =>
-              section.id === editingSectionId ? (
-                <SectionEditForm
-                  key={section.id}
-                  sectionId={section.id}
-                  copy={section.copy}
-                  onSaved={() => setEditingSectionId(null)}
-                  onCancel={() => setEditingSectionId(null)}
-                />
-              ) : (
+            selectedPage.sections.map((section) => {
+              if (editing?.sectionId === section.id) {
+                if (editing.kind === "content") {
+                  return (
+                    <SectionEditForm
+                      key={section.id}
+                      sectionId={section.id}
+                      copy={section.copy}
+                      onSaved={() => setEditing(null)}
+                      onCancel={() => setEditing(null)}
+                    />
+                  );
+                }
+                return (
+                  <SceneConfigEditForm
+                    key={section.id}
+                    sectionId={section.id}
+                    experience3d={section.experience3d}
+                    onSaved={() => setEditing(null)}
+                    onCancel={() => setEditing(null)}
+                  />
+                );
+              }
+
+              return (
                 <section
                   key={section.id}
                   data-has-content={section.hasContent}
@@ -118,13 +142,29 @@ export function SitePreviewViewer({ preview }: SitePreviewViewerProps) {
                     >
                       {section.heading}
                     </h2>
-                    <button
-                      type="button"
-                      onClick={() => setEditingSectionId(section.id)}
-                      className="shrink-0 rounded-md border border-white/15 px-3 py-1 text-xs font-medium text-foreground/70 transition-colors hover:border-white/30"
-                    >
-                      Editar
-                    </button>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditing({ sectionId: section.id, kind: "content" })
+                        }
+                        className="rounded-md border border-white/15 px-3 py-1 text-xs font-medium text-foreground/70 transition-colors hover:border-white/30"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEditing({
+                            sectionId: section.id,
+                            kind: "experience3d",
+                          })
+                        }
+                        className="rounded-md border border-white/15 px-3 py-1 text-xs font-medium text-foreground/70 transition-colors hover:border-white/30"
+                      >
+                        {section.experience3d ? "Editar 3D" : "Configurar 3D"}
+                      </button>
+                    </div>
                   </div>
                   {section.experience3d ? (
                     <Experience3DView
@@ -169,8 +209,8 @@ export function SitePreviewViewer({ preview }: SitePreviewViewerProps) {
                     </p>
                   ) : null}
                 </section>
-              ),
-            )
+              );
+            })
           )}
         </div>
       ) : null}
