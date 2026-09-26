@@ -241,6 +241,32 @@ consumer outside this module and its `/dev` demo route.
   mirroring how `site-builder`'s inline content editing (Issue #22)
   followed its own read-only preview (Issue #20).
 
+## Implemented (Issue #48)
+
+Manual editing of a section's 3D experience from the `site-builder`
+preview — the editing counterpart to Issue #45, same relationship Issue
+#22 has to Issue #20.
+
+- `actions.ts` — `upsertExperience3DSceneConfigAction`, a server action
+  structurally identical to `copy/actions.ts`'s
+  `upsertSectionCopyAction`: parses `FormData`, resolves the section via
+  `designService`, and calls `experience3DService.upsertSceneConfig`
+  (Issue #33) — no new validation, eligibility rule or persistence.
+- `types.ts` — `Experience3DSceneConfigFormInput` and
+  `UpsertExperience3DSceneConfigActionState`, the raw-form-values/action-
+  result types the form and action share (same shape as `copy`'s
+  `SectionCopyFormInput`/`UpsertSectionCopyActionState`).
+- The form (`SceneConfigEditForm`, `../../app/leads/[id]/site-builder/`)
+  is shaped around the `hero-showcase` preset's fields specifically (the
+  only registered preset, Issue #37) — a shape picker, color pickers and
+  number inputs, not a raw JSON textarea. `presetKey` is a fixed hidden
+  field for now. Generalizing to a preset picker is deferred until a
+  second preset exists, exactly like `presetKey` itself staying a free
+  slug instead of a closed enum.
+- `SitePreviewViewer` gained a second per-section action ("Configurar
+  3D"/"Editar 3D", depending on whether one exists), mutually exclusive
+  with content editing — a section shows at most one open form at a time.
+
 ## Confirmed architectural decisions (Issue #26)
 
 These decisions are binding for every future Issue in this module
