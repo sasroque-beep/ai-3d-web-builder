@@ -6,6 +6,8 @@ import {
   type PlaywrightTestConfig,
 } from "@playwright/test";
 
+import { E2E_DATABASE_URL } from "./e2e/support/db-url";
+
 const PORT = 3100;
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 const isCI = Boolean(process.env.CI);
@@ -90,7 +92,9 @@ export default defineConfig({
   projects: selectedBrowsers().map((name) => PROJECTS[name]),
   webServer: {
     command: "pnpm start",
-    env: { PORT: String(PORT) },
+    // Isolated database so E2E data never touches `.data/local.db`; specs
+    // seed it through `e2e/support/db.ts`, which reads the same URL.
+    env: { PORT: String(PORT), DATABASE_URL: E2E_DATABASE_URL },
     url: BASE_URL,
     reuseExistingServer: !isCI,
     timeout: 120_000,
