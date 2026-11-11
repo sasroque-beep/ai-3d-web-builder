@@ -116,6 +116,56 @@ describe("SceneConfigEditForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps what the user typed after a failed save instead of resetting to the persisted config", async () => {
+    vi.mocked(upsertExperience3DSceneConfigAction).mockResolvedValue({
+      status: "error",
+      errors: {
+        fallback2d:
+          "Toda experiência 3D precisa de uma imagem de fallback com texto alternativo.",
+      },
+      values: {
+        sectionId: "section-1",
+        presetKey: "hero-showcase",
+        shape: "octahedron",
+        primaryColor: "#111111",
+        accentColor: "#222222",
+        motionIntensity: "0.3",
+        particleCount: "77",
+        fallback2dImageUrl: "/novo.svg",
+        fallback2dImageAlt: "",
+      },
+    });
+
+    const user = userEvent.setup();
+    render(
+      <SceneConfigEditForm
+        sectionId="section-1"
+        experience3d={experience3d()}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Salvar" }));
+
+    expect(
+      await screen.findByText(
+        "Toda experiência 3D precisa de uma imagem de fallback com texto alternativo.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Forma")).toHaveValue("octahedron");
+    expect(screen.getByLabelText("Cor primária")).toHaveValue("#111111");
+    expect(
+      screen.getByLabelText("Intensidade do movimento (0 a 1)"),
+    ).toHaveValue(0.3);
+    expect(screen.getByLabelText(/Quantidade de partículas/)).toHaveValue(77);
+    expect(screen.getByLabelText("Imagem de fallback (2D)")).toHaveValue(
+      "/novo.svg",
+    );
+    expect(
+      screen.getByLabelText("Texto alternativo da imagem de fallback"),
+    ).toHaveValue("");
+  });
+
   it("shows the ineligibility reason returned by the action", async () => {
     vi.mocked(upsertExperience3DSceneConfigAction).mockResolvedValue({
       status: "ineligible",

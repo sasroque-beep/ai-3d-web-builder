@@ -33,17 +33,26 @@ function parseFormInput(formData: FormData): Experience3DSceneConfigFormInput {
 }
 
 /**
+ * `parseHeroShowcaseConfig` (Issue #37) rejects non-number values, so the
+ * numeric coercion happens here. An empty field (cleared, or text the
+ * browser's number input could not parse) is left out instead of becoming
+ * `Number("") === 0`, so the preset applies its own default rather than
+ * silently persisting a static scene / zero particles.
+ */
+function toOptionalNumber(value: string): number | undefined {
+  return value.trim() === "" ? undefined : Number(value);
+}
+
+/**
  * Coerces the raw form strings into the shape `experience3DService.
- * upsertSceneConfig` expects. `parseHeroShowcaseConfig` (Issue #37)
- * rejects non-number `motionIntensity`/`particleCount`, so the numeric
- * coercion has to happen before the config reaches it — `Number("")` is
- * `0`, which the preset validator then judges on its own terms (e.g. an
- * empty particleCount becomes a valid `0`, an empty motionIntensity a
- * valid `0` too; only out-of-range/non-numeric text is rejected).
+ * upsertSceneConfig` expects; out-of-range or non-numeric text is still
+ * judged (and rejected) by the preset validator.
  */
 function toSceneConfigInput(
   form: Experience3DSceneConfigFormInput,
 ): Experience3DSceneConfigInput {
+  const motionIntensity = toOptionalNumber(form.motionIntensity);
+  const particleCount = toOptionalNumber(form.particleCount);
   return {
     sectionId: form.sectionId,
     presetKey: form.presetKey,
@@ -51,8 +60,8 @@ function toSceneConfigInput(
       shape: form.shape,
       primaryColor: form.primaryColor,
       accentColor: form.accentColor,
-      motionIntensity: Number(form.motionIntensity),
-      particleCount: Number(form.particleCount),
+      ...(motionIntensity === undefined ? {} : { motionIntensity }),
+      ...(particleCount === undefined ? {} : { particleCount }),
     },
     fallback2d: {
       imageUrl: form.fallback2dImageUrl,
@@ -74,9 +83,9 @@ export async function upsertExperience3DSceneConfigAction(
 
   if (!result.success) {
     if ("ineligible" in result) {
-      return { status: "ineligible", reason: result.reason };
+      return { status: "ineligible", reason: result.reason, values: form };
     }
-    return { status: "error", errors: result.errors };
+    return { status: "error", errors: result.errors, values: form };
   }
 
   if (section) {
