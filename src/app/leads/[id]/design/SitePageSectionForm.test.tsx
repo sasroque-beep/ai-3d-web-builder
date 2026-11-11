@@ -42,6 +42,32 @@ describe("SitePageSectionForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps its labels on its own fields next to the page form", () => {
+    // The design page renders both forms; shared ids (name/objective/
+    // position) used to point these labels at the page form's inputs.
+    render(
+      <>
+        <form>
+          <input id="name" name="name" />
+          <textarea id="objective" name="objective" />
+          <input id="position" name="position" />
+        </form>
+        <SitePageSectionForm pages={pages} />
+      </>,
+    );
+
+    const form = screen
+      .getByRole("button", { name: "Salvar seção" })
+      .closest("form");
+    for (const label of [
+      "Nome da seção *",
+      "Objetivo da seção",
+      "Ordem na página",
+    ]) {
+      expect(form).toContainElement(screen.getByLabelText(label));
+    }
+  });
+
   it("shows validation errors returned by the action", async () => {
     vi.mocked(upsertSitePageSectionAction).mockResolvedValue({
       status: "error",

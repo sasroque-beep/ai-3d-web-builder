@@ -46,16 +46,16 @@ export function SitePageSectionForm({ pages }: SitePageSectionFormProps) {
       ) : null}
 
       <div className="flex flex-col gap-1">
-        <label className={labelClassName} htmlFor="pageId">
+        <label className={labelClassName} htmlFor="section-pageId">
           Página *
         </label>
         <select
-          id="pageId"
+          id="section-pageId"
           name="pageId"
           required
           className={inputClassName}
           aria-invalid={Boolean(errors.pageId)}
-          aria-describedby={errors.pageId ? "pageId-error" : undefined}
+          aria-describedby={errors.pageId ? "section-pageId-error" : undefined}
         >
           {pages.map((page) => (
             <option key={page.id} value={page.id}>
@@ -64,112 +64,118 @@ export function SitePageSectionForm({ pages }: SitePageSectionFormProps) {
           ))}
         </select>
         {errors.pageId ? (
-          <p id="pageId-error" className={errorClassName}>
+          <p id="section-pageId-error" className={errorClassName}>
             {errors.pageId}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className={labelClassName} htmlFor="sectionKey">
+        <label className={labelClassName} htmlFor="section-sectionKey">
           Identificador da seção *
         </label>
         <input
-          id="sectionKey"
+          id="section-sectionKey"
           name="sectionKey"
           type="text"
           placeholder="Ex.: hero"
           className={inputClassName}
           aria-invalid={Boolean(errors.sectionKey)}
-          aria-describedby={errors.sectionKey ? "sectionKey-error" : undefined}
+          aria-describedby={
+            errors.sectionKey ? "section-sectionKey-error" : undefined
+          }
         />
         <p className="text-xs text-foreground/50">
           Reenviar o mesmo identificador dentro da mesma página atualiza a seção
           em vez de criar uma nova.
         </p>
         {errors.sectionKey ? (
-          <p id="sectionKey-error" className={errorClassName}>
+          <p id="section-sectionKey-error" className={errorClassName}>
             {errors.sectionKey}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className={labelClassName} htmlFor="name">
+        <label className={labelClassName} htmlFor="section-name">
           Nome da seção *
         </label>
         <input
-          id="name"
+          id="section-name"
           name="name"
           type="text"
           className={inputClassName}
           aria-invalid={Boolean(errors.name)}
-          aria-describedby={errors.name ? "name-error" : undefined}
+          aria-describedby={errors.name ? "section-name-error" : undefined}
         />
         {errors.name ? (
-          <p id="name-error" className={errorClassName}>
+          <p id="section-name-error" className={errorClassName}>
             {errors.name}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className={labelClassName} htmlFor="objective">
+        <label className={labelClassName} htmlFor="section-objective">
           Objetivo da seção
         </label>
         <textarea
-          id="objective"
+          id="section-objective"
           name="objective"
           rows={2}
           className={inputClassName}
           aria-invalid={Boolean(errors.objective)}
-          aria-describedby={errors.objective ? "objective-error" : undefined}
+          aria-describedby={
+            errors.objective ? "section-objective-error" : undefined
+          }
         />
         {errors.objective ? (
-          <p id="objective-error" className={errorClassName}>
+          <p id="section-objective-error" className={errorClassName}>
             {errors.objective}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className={labelClassName} htmlFor="ctaReference">
+        <label className={labelClassName} htmlFor="section-ctaReference">
           CTA priorizado nesta seção
         </label>
         <input
-          id="ctaReference"
+          id="section-ctaReference"
           name="ctaReference"
           type="text"
           placeholder="Ex.: Peça agora"
           className={inputClassName}
           aria-invalid={Boolean(errors.ctaReference)}
           aria-describedby={
-            errors.ctaReference ? "ctaReference-error" : undefined
+            errors.ctaReference ? "section-ctaReference-error" : undefined
           }
         />
         {errors.ctaReference ? (
-          <p id="ctaReference-error" className={errorClassName}>
+          <p id="section-ctaReference-error" className={errorClassName}>
             {errors.ctaReference}
           </p>
         ) : null}
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className={labelClassName} htmlFor="position">
+        <label className={labelClassName} htmlFor="section-position">
           Ordem na página
         </label>
         <input
-          id="position"
+          id="section-position"
           name="position"
           type="number"
           min={1}
           placeholder="Deixe em branco para adicionar ao final"
           className={inputClassName}
           aria-invalid={Boolean(errors.position)}
-          aria-describedby={errors.position ? "position-error" : undefined}
+          aria-describedby={
+            errors.position ? "section-position-error" : undefined
+          }
         />
         {errors.position ? (
-          <p id="position-error" className={errorClassName}>
+          <p id="section-position-error" className={errorClassName}>
             {errors.position}
           </p>
         ) : null}
