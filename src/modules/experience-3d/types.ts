@@ -56,10 +56,24 @@ export interface Experience3DSceneConfigFormInput {
   fallback2dImageAlt: string;
 }
 
+/**
+ * Failed submissions echo back what was typed (`values`): React 19 resets
+ * an uncontrolled `<form action>` after every submission, so without this
+ * the form would snap back to the persisted config and the user would lose
+ * their edits on a validation error.
+ */
 export type UpsertExperience3DSceneConfigActionState =
   | { status: "idle" }
-  | { status: "error"; errors: Experience3DSceneConfigFieldErrors }
-  | { status: "ineligible"; reason: string };
+  | {
+      status: "error";
+      errors: Experience3DSceneConfigFieldErrors;
+      values?: Experience3DSceneConfigFormInput;
+    }
+  | {
+      status: "ineligible";
+      reason: string;
+      values?: Experience3DSceneConfigFormInput;
+    };
 
 export const initialUpsertExperience3DSceneConfigActionState: UpsertExperience3DSceneConfigActionState =
   {

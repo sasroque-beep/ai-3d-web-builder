@@ -99,8 +99,35 @@ export function SceneConfigEditForm({
     (config?.particleCount as number | undefined) ??
     HERO_SHOWCASE_DEFAULTS.particleCount;
 
+  // After a failed save, prefill with what the user typed (echoed back by
+  // the action) instead of the persisted config — React 19 resets the form
+  // after each submission. The `key` remounts the form so every field,
+  // including the <select>, picks up these defaults.
+  const submitted = state.status === "idle" ? undefined : state.values;
+  const defaults = submitted
+    ? {
+        shape: submitted.shape,
+        primaryColor: submitted.primaryColor,
+        accentColor: submitted.accentColor,
+        motionIntensity: submitted.motionIntensity,
+        particleCount: submitted.particleCount,
+        fallback2dImageUrl: submitted.fallback2dImageUrl,
+        fallback2dImageAlt: submitted.fallback2dImageAlt,
+      }
+    : {
+        shape,
+        primaryColor,
+        accentColor,
+        motionIntensity,
+        particleCount,
+        fallback2dImageUrl: experience3d?.fallback2d.imageUrl ?? "",
+        fallback2dImageAlt: experience3d?.fallback2d.imageAlt ?? "",
+      };
+  const formKey = submitted ? JSON.stringify(submitted) : "persisted";
+
   return (
     <form
+      key={formKey}
       action={formAction}
       className="flex flex-col gap-3 rounded-md border border-white/10 p-4"
       noValidate
@@ -129,7 +156,7 @@ export function SceneConfigEditForm({
         <select
           id="shape"
           name="shape"
-          defaultValue={shape}
+          defaultValue={defaults.shape}
           className={inputClassName}
         >
           {HERO_SHOWCASE_SHAPES.map((option) => (
@@ -149,7 +176,7 @@ export function SceneConfigEditForm({
             id="primaryColor"
             name="primaryColor"
             type="color"
-            defaultValue={primaryColor}
+            defaultValue={defaults.primaryColor}
             className={`${inputClassName} h-10 p-1`}
           />
         </div>
@@ -161,7 +188,7 @@ export function SceneConfigEditForm({
             id="accentColor"
             name="accentColor"
             type="color"
-            defaultValue={accentColor}
+            defaultValue={defaults.accentColor}
             className={`${inputClassName} h-10 p-1`}
           />
         </div>
@@ -179,7 +206,7 @@ export function SceneConfigEditForm({
             min={0}
             max={1}
             step={0.1}
-            defaultValue={motionIntensity}
+            defaultValue={defaults.motionIntensity}
             className={inputClassName}
           />
         </div>
@@ -194,7 +221,7 @@ export function SceneConfigEditForm({
             min={0}
             max={HERO_SHOWCASE_MAX_PARTICLES}
             step={1}
-            defaultValue={particleCount}
+            defaultValue={defaults.particleCount}
             className={inputClassName}
           />
         </div>
@@ -210,7 +237,7 @@ export function SceneConfigEditForm({
           id="fallback2dImageUrl"
           name="fallback2dImageUrl"
           type="text"
-          defaultValue={experience3d?.fallback2d.imageUrl ?? ""}
+          defaultValue={defaults.fallback2dImageUrl}
           className={inputClassName}
         />
       </div>
@@ -223,7 +250,7 @@ export function SceneConfigEditForm({
           id="fallback2dImageAlt"
           name="fallback2dImageAlt"
           type="text"
-          defaultValue={experience3d?.fallback2d.imageAlt ?? ""}
+          defaultValue={defaults.fallback2dImageAlt}
           className={inputClassName}
         />
       </div>
