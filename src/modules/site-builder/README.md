@@ -1,10 +1,10 @@
 # Site Builder
 
 > Status: **in progress** — site preview implemented (Issue #20), with
-> inline editing of section content from the preview (Issue #22) and,
-> read-only, a section's 3D experience when one is configured (Issue
-> #45). Export/render pipeline and page/section/component generation
-> are still planned.
+> inline editing of section content from the preview (Issue #22), a
+> section's 3D experience displayed (Issue #45) and now also editable
+> inline (Issue #48). Export/render pipeline and page/section/component
+> generation are still planned.
 
 ## Responsibility
 
@@ -65,6 +65,18 @@ already stored by `design` and `copy` and composes it for rendering.
   decision (Issue #26), enforced by its own `isolation.test.ts`.
 - No editing UI for the 3D config yet — future Issue, mirroring how
   Issue #22 followed Issue #20 for section content.
+
+## Implemented (Issue #48)
+
+- Each section gained a second action, "Configurar 3D"/"Editar 3D"
+  (label depends on whether `experience3d` is set), next to the existing
+  "Editar" for content. Both alternate the section into an edit form in
+  place — `SectionEditForm` (content, Issue #22) or `SceneConfigEditForm`
+  (3D, `../experience-3d`'s public `upsertExperience3DSceneConfigAction`)
+  — mutually exclusive: a section shows at most one open form at a time.
+- No new persistence, eligibility rule or validation — reuses
+  `experience3DService.upsertSceneConfig` (Issue #33) exactly like the
+  content form reuses `copyService.upsertSectionCopy`.
 
 ## Belongs here
 

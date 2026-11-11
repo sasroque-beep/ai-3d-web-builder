@@ -7,6 +7,10 @@ vi.mock("@/modules/copy/actions", () => ({
   upsertSectionCopyAction: vi.fn(),
 }));
 
+vi.mock("@/modules/experience-3d/actions", () => ({
+  upsertExperience3DSceneConfigAction: vi.fn(),
+}));
+
 // Renders the real 3D runtime (R3F/Three.js) — irrelevant here, this suite
 // only asserts *whether* the preview mounts it for a section, never how it
 // renders. A minimal stand-in keeps this test independent of WebGL/jsdom
@@ -105,6 +109,28 @@ function experience3d(
     },
     generatedBy: "manual",
     ...overrides,
+  };
+}
+
+/** Replaces the first section's 3D experience in an otherwise-default preview. */
+function previewWithSectionExperience(
+  config: Experience3DSceneConfig | null,
+): SitePreview {
+  const preview = basePreview();
+  const [firstPage, ...restPages] = preview.pages;
+  if (!firstPage) throw new Error("expected a first page");
+  const [firstSection, ...restSections] = firstPage.sections;
+  if (!firstSection) throw new Error("expected a first section");
+
+  return {
+    ...preview,
+    pages: [
+      {
+        ...firstPage,
+        sections: [{ ...firstSection, experience3d: config }, ...restSections],
+      },
+      ...restPages,
+    ],
   };
 }
 
@@ -209,33 +235,79 @@ describe("SitePreviewViewer", () => {
   });
 
   it("mounts the section's 3D experience when one is configured", () => {
-    const preview = basePreview();
-    const [firstPage, ...restPages] = preview.pages;
-    if (!firstPage) throw new Error("expected a first page");
-    const [firstSection, ...restSections] = firstPage.sections;
-    if (!firstSection) throw new Error("expected a first section");
-
     render(
       <SitePreviewViewer
-        preview={{
-          ...preview,
-          pages: [
-            {
-              ...firstPage,
-              sections: [
-                { ...firstSection, experience3d: experience3d() },
-                ...restSections,
-              ],
-            },
-            ...restPages,
-          ],
-        }}
+        preview={previewWithSectionExperience(experience3d())}
       />,
     );
 
     const scene = screen.getByTestId("experience-3d-view");
     expect(scene).toBeInTheDocument();
     expect(scene).toHaveAttribute("data-preset-key", "hero-showcase");
+  });
+
+  it("labels the 3D button 'Configurar 3D' for a section without a 3D experience", () => {
+    render(<SitePreviewViewer preview={basePreview()} />);
+    expect(
+      screen.getByRole("button", { name: "Configurar 3D" }),
+    ).toBeInTheDocument();
+  });
+
+  it("labels the 3D button 'Editar 3D' for a section that already has one", () => {
+    render(
+      <SitePreviewViewer
+        preview={previewWithSectionExperience(experience3d())}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Editar 3D" }),
+    ).toBeInTheDocument();
+  });
+
+  it("switches a section into 3D edit mode and back", async () => {
+    const user = userEvent.setup();
+    render(
+      <SitePreviewViewer
+        preview={previewWithSectionExperience(experience3d())}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Editar 3D" }));
+    expect(screen.getByLabelText("Forma")).toHaveValue("icosahedron");
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Pão fresco todos os dias" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Forma")).not.toBeInTheDocument();
+  });
+
+  it("shows only one edit form at a time for a section (content and 3D are mutually exclusive)", async () => {
+    const user = userEvent.setup();
+    render(
+      <SitePreviewViewer
+        preview={previewWithSectionExperience(experience3d())}
+      />,
+    );
+
+    // Editing content replaces the whole section view, including the "Editar
+    // 3D" button — there's no way to have both forms, or a form and the
+    // other button, on screen at once for the same section.
+    await user.click(screen.getByRole("button", { name: "Editar" }));
+    expect(screen.getByLabelText("Título/headline")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Editar 3D" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Forma")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+    await user.click(screen.getByRole("button", { name: "Editar 3D" }));
+    expect(screen.getByLabelText("Forma")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Editar" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Título/headline")).not.toBeInTheDocument();
   });
 
   it("exits edit mode when switching to a different page", async () => {

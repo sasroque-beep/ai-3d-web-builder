@@ -34,3 +34,34 @@ export interface Experience3DSceneConfig {
 export type Experience3DEligibility =
   | { eligible: true }
   | { eligible: false; reason: string };
+
+/**
+ * Raw string values as they arrive from an HTML form submission (Issue
+ * #48). Shaped around the `hero-showcase` preset's fields specifically —
+ * the only registered preset today (Issue #37) — rather than a generic
+ * "config blob" field, so the form can offer real inputs (a shape picker,
+ * color pickers, sliders) instead of a raw JSON textarea. Generalizing
+ * this once a second preset exists is deliberately deferred (mirrors how
+ * `presetKey` itself stays a free slug instead of a closed enum).
+ */
+export interface Experience3DSceneConfigFormInput {
+  sectionId: string;
+  presetKey: string;
+  shape: string;
+  primaryColor: string;
+  accentColor: string;
+  motionIntensity: string;
+  particleCount: string;
+  fallback2dImageUrl: string;
+  fallback2dImageAlt: string;
+}
+
+export type UpsertExperience3DSceneConfigActionState =
+  | { status: "idle" }
+  | { status: "error"; errors: Experience3DSceneConfigFieldErrors }
+  | { status: "ineligible"; reason: string };
+
+export const initialUpsertExperience3DSceneConfigActionState: UpsertExperience3DSceneConfigActionState =
+  {
+    status: "idle",
+  };
